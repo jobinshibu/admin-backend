@@ -13,7 +13,10 @@
     }
   },
   "test": {
-    "use_env_variable": "DATABASE_URL",
+    "username": "demoadmin",
+    "password": "TaIhd5Ov8JQslcYbtxKns63QTTDtS7oJ",
+    "database": "demoadmin",
+    "host": "dpg-d5eu4gf5r7bs73c32d30-a.oregon-postgres.render.com",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {
@@ -23,7 +26,10 @@
     }
   },
   "production": {
-    "use_env_variable": "DATABASE_URL",
+    "username": "demoadmin",
+    "password": "TaIhd5Ov8JQslcYbtxKns63QTTDtS7oJ",
+    "database": "demoadmin",
+    "host": "dpg-d5eu4gf5r7bs73c32d30-a.oregon-postgres.render.com",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {
