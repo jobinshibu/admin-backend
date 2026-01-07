@@ -68,6 +68,7 @@ const schemas = {
     contact_number: Joi.string().optional(),
     expertin: Joi.string().optional().allow(""),
     active_status: Joi.boolean().optional().default(false),
+    is_24_by_7_working: Joi.optional(),
   }),
   establishmentEdit: Joi.object().keys({
     licence_no: Joi.string().optional().allow(""),
@@ -87,6 +88,7 @@ const schemas = {
     contact_number: Joi.string().optional(),
     expertin: Joi.string().optional().allow(""),
     active_status: Joi.boolean().optional().default(false),
+    is_24_by_7_working: Joi.optional(),
   }),
 
   establishmentDelete: Joi.object().keys({
