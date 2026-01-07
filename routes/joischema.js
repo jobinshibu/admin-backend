@@ -69,9 +69,9 @@ const schemas = {
     expertin: Joi.string().optional().allow(""),
     active_status: Joi.boolean().optional().default(false),
     is_24_by_7_working: Joi.optional(),
-    healineVerified: Joi.boolean().optional().default(false),
-    recommended: Joi.boolean().optional().default(false),
-    topRated: Joi.boolean().optional().default(false),
+    healineVerified: Joi.optional(),
+    recommended: Joi.optional(),
+    topRated: Joi.optional(),
   }),
   establishmentEdit: Joi.object().keys({
     licence_no: Joi.string().optional().allow(""),
@@ -92,9 +92,9 @@ const schemas = {
     expertin: Joi.string().optional().allow(""),
     active_status: Joi.boolean().optional().default(false),
     is_24_by_7_working: Joi.optional(),
-    healineVerified: Joi.boolean().optional().default(false),
-    recommended: Joi.boolean().optional().default(false),
-    topRated: Joi.boolean().optional().default(false),
+    healineVerified: Joi.optional(),
+    recommended: Joi.optional(),
+    topRated: Joi.optional(),
   }),
 
   establishmentDelete: Joi.object().keys({
