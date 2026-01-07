@@ -1,5 +1,6 @@
 let AdminRoute = {
   authCtrl: require("./admin/auth.controller"),
+  commonCtrl: require("./admin/common.controller"),
   professionCtrl: require("./admin/professions.controller"),
   professionTypeCtrl: require("./admin/professionType.controller"),
   nationalitiesCtrl: require("./admin/nationalities.controller"),
