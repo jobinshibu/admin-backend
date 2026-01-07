@@ -132,27 +132,37 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "city_id",
       as: "cityInfo",
     });
-  };
-
-  const SEARCHABLE_TYPES = ['Hospital', 'Clinic', 'Pharmacy'];
-
-  // Helper to determine if type is searchable and get correct lowercase type
-  const getSearchType = async (establishment, transaction) => {
-    if (!establishment.establishment_type) return null;
-
-    const typeRecord = await models.establishment_types.findByPk(
-      establishment.establishment_type,
-      {
-        attributes: ['name'],
-        transaction
-      }
-    );
-
-    if (!typeRecord) return null;
-
-    Establishment.belongsTo(models.cities, {
-      foreignKey: "city_id",
-      as: "cityInfo",
+    Establishment.hasMany(models.establishment_images, {
+      foreignKey: "establishment_id",
+      as: "imageList",
+    });
+    Establishment.hasMany(models.establishment_banner_images, {
+      foreignKey: "establishment_id",
+      as: "bannerImageList",
+    });
+    Establishment.hasMany(models.establishment_working_hours, {
+      foreignKey: "establishment_id",
+      as: "workingHoursDetails",
+    });
+    Establishment.hasMany(models.establishment_specialities, {
+      foreignKey: "establishment_id",
+      as: "specialitiesList",
+    });
+    Establishment.hasMany(models.establishment_facilities, {
+      foreignKey: "establishment_id",
+      as: "facilitiesList",
+    });
+    Establishment.hasMany(models.establishment_services, {
+      foreignKey: "establishment_id",
+      as: "servicesList",
+    });
+    Establishment.hasMany(models.professions_departments, {
+      foreignKey: "establishment_id",
+      as: "departmentList",
+    });
+    Establishment.hasMany(models.insurance_plan_establishments, {
+      foreignKey: "establishment_id",
+      as: "insurancePlansList",
     });
   };
 

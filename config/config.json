@@ -4,14 +4,32 @@
     "password": "TaIhd5Ov8JQslcYbtxKns63QTTDtS7oJ",
     "database": "demoadmin",
     "host": "dpg-d5eu4gf5r7bs73c32d30-a.oregon-postgres.render.com",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   },
   "test": {
     "use_env_variable": "DATABASE_URL",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   },
   "production": {
     "use_env_variable": "DATABASE_URL",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   }
 }

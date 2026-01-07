@@ -141,6 +141,26 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "nationality_id",
       as: "nationalityInfo",
     });
+    Professions.hasMany(models.professions_specialities, {
+      foreignKey: "proffession_id",
+      as: "specialitiesList",
+    });
+    Professions.hasMany(models.profession_working_hours, {
+      foreignKey: "profession_id",
+      as: "working_hours",
+    });
+    Professions.hasMany(models.professions_services, {
+      foreignKey: "proffession_id",
+      as: "servicesList",
+    });
+    Professions.hasMany(models.professions_languges, {
+      foreignKey: "proffession_id",
+      as: "languagesList",
+    });
+    Professions.hasMany(models.professions_departments, {
+      foreignKey: "proffession_id",
+      as: "professionsEstablishmentList",
+    });
   };
 
   Professions.prototype.toJSON = function () {
