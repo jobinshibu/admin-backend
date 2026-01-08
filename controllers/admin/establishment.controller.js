@@ -1056,7 +1056,7 @@ class EstablishmentController {
           day_of_week: item.day_of_week,
           start_time: item.start_time,
           end_time: item.end_time,
-          is_day_off: item.is_day_off,
+          is_day_off: toBoolean(item.is_day_off),
         });
       });
       await EstablishmentHrsModel.bulkCreate(bulkHoursData);

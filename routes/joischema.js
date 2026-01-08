@@ -260,7 +260,7 @@ const schemas = {
     day_of_week: Joi.number().required(),
     start_time: Joi.string().optional().allow(""),
     end_time: Joi.string().optional().allow(""),
-    is_day_off: Joi.number().required(),
+    is_day_off: Joi.boolean().required(),
   }),
 
   establishmentworkinghoursEdit: Joi.object().keys({
@@ -268,7 +268,7 @@ const schemas = {
     day_of_week: Joi.number().required(),
     start_time: Joi.string().optional().allow(""),
     end_time: Joi.string().optional().allow(""),
-    is_day_off: Joi.number().required(),
+    is_day_off: Joi.boolean().required(),
   }),
 
   AddDepartmentWorkingHoursValidator: Joi.object().keys({
@@ -276,7 +276,7 @@ const schemas = {
     day_of_week: Joi.number().required(),
     start_time: Joi.string().optional().allow(""),
     end_time: Joi.string().optional().allow(""),
-    is_day_off: Joi.number().required(),
+    is_day_off: Joi.boolean().required(),
   }),
   AddEstablishmentHolidayValidator: Joi.object().keys({
     establishment_id: Joi.number().required(),
@@ -294,7 +294,7 @@ const schemas = {
     day_of_week: Joi.number().required(),
     start_time: Joi.string().optional().allow(""),
     end_time: Joi.string().optional().allow(""),
-    is_day_off: Joi.number().required(),
+    is_day_off: Joi.boolean().required(),
   }),
 
   establishmentworkinghoursDelete: Joi.object().keys({

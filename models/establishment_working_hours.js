@@ -18,14 +18,14 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true,
       },
       start_time: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TIME,
       },
       end_time: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TIME,
       },
       is_day_off: {
-        type: DataTypes.STRING(255),
-        defaultValue: "0",
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

@@ -4,9 +4,12 @@ let { Sequelize, Op } = require("sequelize");
 const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 // const { paginationService } = require("../../services");
+const toBoolean = (val) => {
+  return val === true || val === "true" || val === 1 || val === "1";
+};
 
 class departmentWorkingHoursController {
-  constructor() {}
+  constructor() { }
 
   // all category list
   async list(req) {
@@ -82,14 +85,14 @@ class departmentWorkingHoursController {
       let hrsData = {
         department_id: department_id,
         day_of_week: day_of_week,
-        start_time: !is_day_off ? start_time : null,
-        end_time: !is_day_off ? end_time : null,
-        is_day_off: is_day_off,
+        start_time: !toBoolean(is_day_off) ? start_time : null,
+        end_time: !toBoolean(is_day_off) ? end_time : null,
+        is_day_off: toBoolean(is_day_off),
       };
 
       const isDayChangEntryExist = await departmentWorkingHoursmodel.findOne({
         where: {
-          is_day_off: !is_day_off,
+          is_day_off: !toBoolean(is_day_off),
           department_id: department_id,
           day_of_week: day_of_week,
         },
@@ -106,7 +109,7 @@ class departmentWorkingHoursController {
         where: {
           start_time: { [Op.lt]: hrsData.end_time },
           end_time: { [Op.gt]: hrsData.start_time },
-          is_day_off: is_day_off,
+          is_day_off: toBoolean(is_day_off),
           department_id: department_id,
           day_of_week: day_of_week,
         },
@@ -148,15 +151,15 @@ class departmentWorkingHoursController {
       let hrsData = {
         department_id: department_id,
         day_of_week: day_of_week,
-        start_time: !is_day_off ? start_time : null,
-        end_time: !is_day_off ? end_time : null,
-        is_day_off: is_day_off,
+        start_time: !toBoolean(is_day_off) ? start_time : null,
+        end_time: !toBoolean(is_day_off) ? end_time : null,
+        is_day_off: toBoolean(is_day_off),
       };
 
       const isDayChangEntryExist = await departmentWorkingHoursmodel.findOne({
         where: {
           day_of_week: day_of_week,
-          is_day_off: !is_day_off,
+          is_day_off: !toBoolean(is_day_off),
           department_id: department_id,
         },
       });
@@ -172,7 +175,7 @@ class departmentWorkingHoursController {
         where: {
           start_time: { [Op.lt]: hrsData.end_time },
           end_time: { [Op.gt]: hrsData.start_time },
-          is_day_off: is_day_off,
+          is_day_off: toBoolean(is_day_off),
           department_id: department_id,
           day_of_week: day_of_week,
           id: { [Op.ne]: id },

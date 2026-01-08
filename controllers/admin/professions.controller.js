@@ -583,8 +583,8 @@ class ProfessionsController {
         return responseModel.validationError(0, "id and active_status are required");
       }
 
-      // Normalize to 1 or 0 (handles 1, "1", true → 1   and   0, "0", false → 0)
-      const normalizedStatus = (active_status === 1 || active_status === "1" || active_status === true) ? 1 : 0;
+      // Normalize to boolean
+      const normalizedStatus = toBoolean(active_status);
 
       const profession = await ProfessionsModal.findByPk(id, {
         attributes: ["id", "active_status", "first_name", "last_name", "surnametype"]

@@ -16,16 +16,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       start_time: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TIME,
         allowNull: true,
       },
       end_time: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TIME,
         allowNull: true,
       },
       is_day_off: {
-        type: DataTypes.STRING(255),
-        defaultValue: "0",
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
 
     },
