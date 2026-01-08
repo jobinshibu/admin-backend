@@ -25,7 +25,7 @@ class B2BBundleController {
             t = await db.sequelize.transaction();
 
             // Check bundle existence
-            const bundle = await db.package_bundles.findByPk(bundle_id, { transaction: t });
+            const bundle = await db.package_bundles.findByPk(String(bundle_id), { transaction: t });
             if (!bundle) {
                 await t.rollback();
                 return responseModel.validationError(0, "Bundle not found", {});
@@ -45,7 +45,7 @@ class B2BBundleController {
             // Create Subscription
             const subscription = await db.b2b_bundle_subscriptions.create({
                 company_name,
-                bundle_id,
+                bundle_id: String(bundle_id),
                 employee_count: employees.length,
                 total_price,
                 coupon_code, // Manual Code

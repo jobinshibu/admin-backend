@@ -91,7 +91,7 @@ class PackageBundleController {
       const { id } = req.params;
 
       const bundle = await PackageBundleModel.findOne({
-        where: { id },
+        where: { id: String(id) },
         include: [
           {
             model: db.establishments,

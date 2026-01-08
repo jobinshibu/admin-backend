@@ -14,7 +14,7 @@ class PackageBundlePurchaseController {
 
             const where = {};
             if (status) where.status = status;
-            if (bundle_id) where.bundle_id = bundle_id;
+            if (bundle_id) where.bundle_id = String(bundle_id);
             if (customer_id) where.customer_id = customer_id;
 
             // If search is provided, we might need to search by customer name/phone (requires join alias)
