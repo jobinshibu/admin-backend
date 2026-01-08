@@ -9,7 +9,7 @@ const { getOffset } = require("../../utils/helper");
 const EstablishmentFacilitiesModal = db.establishment_facilities;
 
 class FacilitiesController {
-  constructor() {}
+  constructor() { }
   async list(req) {
     try {
       const { page_no, items_per_page, search_text } = req.query;
@@ -51,32 +51,27 @@ class FacilitiesController {
     try {
       const { name, description } = req.body;
 
-      let facData = { name: name };
-      if (req.files["icon"]) {
-        const facDetail = await FacilityModel.findOne({
-          where: facData,
-          attributes: ["id", "name"],
-        });
+      const facDetail = await FacilityModel.findOne({
+        where: { name: name },
+        attributes: ["id", "name"],
+      });
 
-        if (facDetail == null) {
-          let facData = {
-            name: name,
-            icon: req.files["icon"][0]["filename"],
-            description: description,
-          };
-          const savefacData = await FacilityModel.build(
-            facData
-          ).save();
-          return responseModel.successResponse(
-            1,
-            "Facility created Successfully",
-            savefacData
-          );
-        } else {
-          return responseModel.validationError(0, "Facility already exist");
+      if (facDetail == null) {
+        let facData = {
+          name: name,
+          description: description,
+        };
+        if (req.files && req.files["icon"]) {
+          facData.icon = req.files["icon"][0]["filename"];
         }
+        const savefacData = await FacilityModel.create(facData);
+        return responseModel.successResponse(
+          1,
+          "Facility created Successfully",
+          savefacData
+        );
       } else {
-        return responseModel.validationError(0, "Icon is required");
+        return responseModel.validationError(0, "Facility already exist");
       }
     } catch (err) {
       const errMessage = typeof err == "string" ? err : err.message;
