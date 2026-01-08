@@ -8,16 +8,16 @@ const { getOffset } = require("../../utils/helper");
 const ProfessionsSpecialitiesModal = db.professions_specialities;
 const DeptSpecialitiesModel = db.department_specialties;
 class BannerController {
-  constructor() {}
+  constructor() { }
 
   async list(req) {
     try {
-      const { search_text, page_no, items_per_page ,page} = req.query;
+      const { search_text, page_no, items_per_page, page } = req.query;
       const offset = getOffset(+page_no, +items_per_page);
       var whereClouse = [{}];
       if (page && page !== "") {
-  whereClouse.page = page;
-}
+        whereClouse.page = page;
+      }
       console.log("sas");
       const bannersList = await BannerModal.findAndCountAll({
         offset: offset,
@@ -121,32 +121,25 @@ class BannerController {
   async store(req) {
     try {
       const { link, page } = req.body;
-      if (req.files["image"]) {
-        const bannerCount = await BannerModal.count({});
-        if (+bannerCount > 4) {
-          return responseModel.validationError(
-            0,
-            "Sorry! You can't add more than 5 banners.",
-            {}
-          );
-        }
-        let bannerData = {
-          link_url: link,
-          image: req.files["image"][0]["filename"],
-          page: page,
-          
-        };
-        const saveRes = await BannerModal.build(bannerData).save();
-        return responseModel.successResponse(
-          1,
-          "Banner Created Successfully",
-          saveRes
+      const bannerCount = await BannerModal.count({});
+      if (+bannerCount > 4) {
+        return responseModel.validationError(
+          0,
+          "Sorry! You can't add more than 5 banners.",
+          {}
         );
-      } else {
-        return responseModel.validationError(0, "Validation failed", {
-          icon: "Image is required",
-        });
       }
+      let bannerData = {
+        link_url: link,
+        image: null,
+        page: page,
+      };
+      const saveRes = await BannerModal.create(bannerData);
+      return responseModel.successResponse(
+        1,
+        "Banner Created Successfully",
+        saveRes
+      );
     } catch (err) {
       const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
@@ -162,19 +155,13 @@ class BannerController {
     try {
       const id = req.params.id;
       const { link, page } = req.body;
-      console.log("pagggggggggggggggeee",page);
+      console.log("pagggggggggggggggeee", page);
 
       let bannerData = {
         link_url: link,
         page: page,
+        image: null,
       };
-      if (
-        req.files["image"] &&
-        req.files["image"][0]["filename"] &&
-        req.files["image"][0]["filename"] != ""
-      ) {
-        bannerData.image = req.files["image"][0]["filename"];
-      }
       const updateBanner = await BannerModal.update(bannerData, {
         where: { id: id },
       });

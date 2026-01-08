@@ -9,17 +9,7 @@ const AdminAuth = require("../../middleware");
 
 const establishmentBannerImageController = new AdminRoute.establishmentBannerImagesCtrl.EstablishmentBannerImageController();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads/establishment_image");
-  },
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-  },
-});
+const storage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
   if (

@@ -7,7 +7,7 @@ const { getOffset } = require("../../utils/helper");
 const ProfessionsSpecialitiesModal = db.professions_specialities;
 const DeptSpecialitiesModel = db.department_specialties;
 class SpecialitiesController {
-  constructor() {}
+  constructor() { }
 
   // all Specialities list
   async list(req) {
@@ -123,38 +123,32 @@ class SpecialitiesController {
   async store(req) {
     try {
       const { name, description, tier } = req.body;
-      if (req.files["icon"]) {
-        const getSpecialitiesCheck = await SpecialitiesModal.findOne({
-          where: { name: name },
-          attributes: ["id", "name"],
-        });
+      const getSpecialitiesCheck = await SpecialitiesModal.findOne({
+        where: { name: name },
+        attributes: ["id", "name"],
+      });
 
-        if (getSpecialitiesCheck == null) {
-          let specialitiesData = {
-            name: name,
-            icon: req.files["icon"][0]["filename"],
-            description: description,
-            tier: tier,
-          };
-          const savespecialitiesData = await SpecialitiesModal.build(
-            specialitiesData
-          ).save();
-          return responseModel.successResponse(
-            1,
-            "Specialities Created Successfully",
-            savespecialitiesData
-          );
-        } else {
-          return responseModel.validationError(
-            0,
-            "Specialities name already exist",
-            {}
-          );
-        }
+      if (getSpecialitiesCheck == null) {
+        let specialitiesData = {
+          name: name,
+          icon: null,
+          description: description,
+          tier: tier,
+        };
+        const savespecialitiesData = await SpecialitiesModal.create(
+          specialitiesData
+        );
+        return responseModel.successResponse(
+          1,
+          "Specialities Created Successfully",
+          savespecialitiesData
+        );
       } else {
-        return responseModel.validationError(0, "Validation failed", {
-          icon: "Icon is required",
-        });
+        return responseModel.validationError(
+          0,
+          "Specialities name already exist",
+          {}
+        );
       }
     } catch (err) {
       const errMessage = typeof err == "string" ? err : err.message;
@@ -187,11 +181,7 @@ class SpecialitiesController {
         return responseModel.validationError(0, "Specialities name already exist", {});
       }
 
-      let specialitiesData = { name, description, tier };
-
-      if (req.files?.["icon"]) {
-        specialitiesData.icon = req.files["icon"][0]["filename"];
-      }
+      let specialitiesData = { name, description, tier, icon: null };
 
       // Update DB
       await SpecialitiesModal.update(specialitiesData, {
@@ -233,7 +223,7 @@ class SpecialitiesController {
       return responseModel.successResponse(1, "Specialities Updated Successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       const errMessage = typeof err === "string" ? err : err.message;
       return responseModel.failResponse(0, "Something went wrong.", {}, errMessage);
     }
@@ -298,7 +288,7 @@ class SpecialitiesController {
       return responseModel.successResponse(1, "Specialities Deleted Successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       const errMessage = typeof err === "string" ? err : err.message;
       return responseModel.failResponse(0, "Something went wrong.", {}, errMessage);
     }

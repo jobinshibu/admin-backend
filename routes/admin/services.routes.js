@@ -4,16 +4,7 @@ const joiSchema = require("../joischema");
 const joivalidate = require("../joivalidate");
 const { AdminRoute } = require("../../controllers");
 const multer = require("multer");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/services/"); // create this folder if it doesn't exist
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = file.originalname.split('.').pop();
-    cb(null, file.fieldname + "-" + uniqueSuffix + "." + ext);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 const servicesController = new AdminRoute.ServicesCtrl.ServicesController();
@@ -25,7 +16,7 @@ router.get("/", async (req, res) => {
 
 router.post(
   "/",
-  upload.single("image"), 
+  upload.single("image"),
   [joivalidate.joivalidate(joiSchema.servicesValidator)],
   async (req, res) => {
     let result = await servicesController.store(req);
@@ -35,7 +26,7 @@ router.post(
 
 router.put(
   "/:id",
-  upload.single("image"), 
+  upload.single("image"),
   [joivalidate.joivalidate(joiSchema.servicesValidator)],
   async (req, res) => {
     let result = await servicesController.update(req);

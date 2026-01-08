@@ -9,19 +9,7 @@ const AdminAuth = require("./../../middleware");
 
 const specialities = new AdminRoute.specialitiesCtrl.SpecialitiesController();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    console.log("storage call");
-    cb(null, "./uploads/specialities");
-  },
-  filename: (req, file, cb) => {
-    console.log("file4", file);
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-  },
-});
+const storage = multer.memoryStorage();
 const multerFilter = (req, file, cb) => {
   console.log("multerFilter call");
   console.log("file", file);

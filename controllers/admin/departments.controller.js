@@ -16,7 +16,7 @@ const { getOffset } = require("../../utils/helper");
 // const { paginationService } = require("../../services");
 
 class DepartmentsController {
-  constructor() {}
+  constructor() { }
 
   // all category list
   async list(req) {
@@ -227,16 +227,6 @@ class DepartmentsController {
       if (getDepartmentDetails == null) {
         const saveData = await DepartmentsModel.build(departmentData).save();
 
-        if (req.files["images"]) {
-          let bulkImage = [];
-          req.files["images"].map((item) => {
-            bulkImage.push({
-              department_id: saveData.dataValues.id,
-              image: item.filename,
-            });
-          });
-          const saveBulkData = await DeptImgModel.bulkCreate(bulkImage);
-        }
 
         if (specialities?.length > 0) {
           let specialitiesData = [];
@@ -346,16 +336,6 @@ class DepartmentsController {
         await DeptImgModel.destroy({
           where: { department_id: id },
         });
-        if (req.files["images"]) {
-          let bulkImage = [];
-          req.files["images"].map((item) => {
-            bulkImage.push({
-              department_id: id,
-              image: item.filename,
-            });
-          });
-          const saveBulkData = await DeptImgModel.bulkCreate(bulkImage);
-        }
         await DeptSpecialitiesModel.destroy({
           where: { dept_id: id },
         });

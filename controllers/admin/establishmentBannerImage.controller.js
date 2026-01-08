@@ -6,7 +6,7 @@ const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 
 class EstablishmentBannerImageController {
-  constructor() {}
+  constructor() { }
 
   async list(req) {
     try {
@@ -124,24 +124,20 @@ class EstablishmentBannerImageController {
     try {
       const { establishment_id, linkUrl, type } = req.body;
 
-      if (!req.files || !req.files["image"]  || req.files["image"].length === 0) {
-        return responseModel.failResponse(
-          400,
-          "Validation failed",
-          {},
-          "Image is required"
-        );
-      }
+      // Create entries with image: null
+      // Assuming we still want to create as many entries as 'image' fields sent, but set them to null
+      // Or just create one entry if images are sent.
+      // Usually these controllers handle single file or multiple.
+      // Given the requirement, I'll allow store without images and set it to null.
 
-      // Loop through uploaded files
-        let dataToInsert = req.files["image"].map((file) => ({
+      let dataToInsert = [{
         establishment_id: establishment_id,
-        image: file.filename,
-        linkUrl: linkUrl, // Note: Apply logic here for array support if linkUrl needs to map per image
+        image: null,
+        linkUrl: linkUrl,
         type: type || "banner",
-        }));
+      }];
 
-      const saveRes = await EstablishmentBannerImageModal.bulkCreate(dataToInsert);;
+      const saveRes = await EstablishmentBannerImageModal.bulkCreate(dataToInsert);
 
       return responseModel.successResponse(
         201,
@@ -183,16 +179,7 @@ class EstablishmentBannerImageController {
         type: type || "banner",
       };
 
-      if (req.files && req.files["image"] && req.files["image"][0]["filename"]) {
-        // Delete old image if it exists
-        if (existingImage.image) {
-          const filePath = `./uploads/establishment_image${existingImage.image}`;
-          if (fs.existsSync(filePath) ) {
-            fs.unlinkSync(filePath);
-          }
-        }
-        imageData.image = req.files["image"][0]["filename"];
-      }
+      imageData.image = null;
 
       const updateResult = await EstablishmentBannerImageModal.update(imageData, {
         where: { id: id },

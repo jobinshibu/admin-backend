@@ -9,22 +9,7 @@ const AdminAuth = require("../../middleware");
 
 const professions = new AdminRoute.professionCtrl.ProfessionsController();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads/professions");
-  },
-  filename: (req, file, cb) => {
-    console.log(
-      "file4",
-      file,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-  },
-});
+const storage = multer.memoryStorage();
 const multerFilter = (req, file, cb) => {
   console.log("file", file);
   if (

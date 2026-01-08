@@ -10,19 +10,7 @@ const AdminAuth = require("./../../middleware");
 const bannerController = new AdminRoute.bannersCtrl.BannerController();
 
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    console.log("storage call");
-    cb(null, "./uploads/banners");
-  },
-  filename: (req, file, cb) => {
-    console.log("file4", file);
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-  },
-});
+const storage = multer.memoryStorage();
 const multerFilter = (req, file, cb) => {
   console.log("multerFilter call");
   console.log("file", file);

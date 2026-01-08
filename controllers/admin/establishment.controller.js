@@ -37,7 +37,7 @@ const toBoolean = (val) => {
 };
 
 class EstablishmentController {
-  constructor() {}
+  constructor() { }
 
   // all Establishment Type list
   async list(req) {
@@ -357,7 +357,7 @@ class EstablishmentController {
       zone_id: zone_id,
       expertin: expertin,
       pin_code: pin_code,
-      latitude: latitude  || null,
+      latitude: latitude || null,
       longitude: longitude || null,
       email: email,
       // primary_photo: req.files["primary_photo"][0]["filename"],
@@ -371,10 +371,7 @@ class EstablishmentController {
       active_status: toBoolean(active_status),
       // created_by: req.user.id || 0,
     };
-    if (req.files?.["primary_photo"]) {
-      establishmentData.primary_photo =
-        req.files["primary_photo"][0]["filename"];
-    }
+    establishmentData.primary_photo = null;
 
     const conditions = [];
 
@@ -416,18 +413,6 @@ class EstablishmentController {
 
       let insertData = JSON.parse(JSON.stringify(saveData));
 
-      if (req.files && req.files["establishment_images"]) {
-        let bulkImage = [];
-        req.files["establishment_images"].map((item) => {
-          bulkImage.push({
-            establishment_id: insertData.id,
-            image: item.filename,
-          });
-        });
-        const saveBulkData = await EstablishmentImagesModal.bulkCreate(
-          bulkImage
-        );
-      }
 
 
       // speciality_id
@@ -729,14 +714,7 @@ class EstablishmentController {
               };
               console.log("establishmentData", establishmentData);
 
-              if (item.image && item.image != "") {
-                var imageRes = await EstablishmentController.saveImageFromUrl(
-                  item.image
-                );
-                if (imageRes && imageRes.status) {
-                  establishmentData.primary_photo = imageRes.filename;
-                }
-              }
+              establishmentData.primary_photo = null;
               var saveData = await EstablishmentModal.build(
                 establishmentData
               ).save();
@@ -822,29 +800,6 @@ class EstablishmentController {
                 }
               }
 
-              if (item.establishmentImages && item.establishmentImages != "") {
-                let establishmentImages = item.establishmentImages
-                  .split(",")
-                  .map((image) => image.trim());
-
-                if (establishmentImages && establishmentImages.length > 0) {
-                  let bulkImage = [];
-                  for (const imageUrl of establishmentImages) {
-                    var imageRes =
-                      await EstablishmentController.saveImageFromUrl(imageUrl);
-                    if (imageRes && imageRes.status) {
-                      bulkImage.push({
-                        establishment_id: insertData.id,
-                        image: imageRes.filename,
-                      });
-                    }
-                  }
-                  if (bulkImage.length > 0) {
-                    const saveBulkData =
-                      await EstablishmentImagesModal.bulkCreate(bulkImage);
-                  }
-                }
-              }
             }
             fs.unlinkSync(csvUrl);
             resolve(
@@ -945,16 +900,7 @@ class EstablishmentController {
         active_status: toBoolean(active_status),
       };
 
-      if (req.files?.["primary_photo"]) {
-        establishmentData.primary_photo = req.files["primary_photo"][0]["filename"];
-        const getImage = await EstablishmentModal.findOne({
-          where: { id },
-          attributes: ["primary_photo"],
-        });
-        if (getImage?.primary_photo && fs.existsSync(`./Uploads/establishment/${getImage.primary_photo}`)) {
-          fs.unlinkSync(`./Uploads/establishment/${getImage.primary_photo}`);
-        }
-      }
+      establishmentData.primary_photo = null;
 
       const getEstablishmentCheck = await EstablishmentModal.findOne({
         where: {
@@ -995,26 +941,6 @@ class EstablishmentController {
           }
         }
 
-        // Handle establishment images
-        if (req.files?.["establishment_images"] && req.files["establishment_images"].length > 0) {
-          // Delete existing images
-          const existingImages = await EstablishmentImagesModal.findAll({
-            where: { establishment_id: id },
-          });
-          for (const image of existingImages) {
-            if (fs.existsSync(`./Uploads/establishment/${image.image}`)) {
-              fs.unlinkSync(`./Uploads/establishment/${image.image}`);
-            }
-          }
-          await EstablishmentImagesModal.destroy({ where: { establishment_id: id }, transaction: t });
-
-          // Add new images
-          const bulkImage = req.files["establishment_images"].map((item) => ({
-            establishment_id: id,
-            image: item.filename,
-          }));
-          await EstablishmentImagesModal.bulkCreate(bulkImage, { transaction: t });
-        }
 
         // Handle facilities
         await EstablishmentFacilitiesModal.destroy({ where: { establishment_id: id }, transaction: t });
@@ -1068,7 +994,7 @@ class EstablishmentController {
           if (!SearchModel) throw new Error("Search model not found");
 
           const newStatus = toBoolean(active_status);
-          const typeRecord = establishment_type 
+          const typeRecord = establishment_type
             ? await EstablishmentTypeModal.findByPk(establishment_type, { attributes: ['name'] })
             : null;
 
@@ -1159,7 +1085,7 @@ class EstablishmentController {
 
       // Validation
       if (!id || active_status === undefined || active_status === null) {
-        if (t) await t.rollback().catch(() => {});
+        if (t) await t.rollback().catch(() => { });
         return responseModel.validationError(0, "id and active_status are required");
       }
 
@@ -1176,13 +1102,13 @@ class EstablishmentController {
       });
 
       if (!establishment) {
-        if (t) await t.rollback().catch(() => {});
+        if (t) await t.rollback().catch(() => { });
         return responseModel.notFound(0, "Establishment not found");
       }
 
       // Agar status already same hai
       if (establishment.active_status === normalizedStatus) {
-        if (t) await t.rollback().catch(() => {});
+        if (t) await t.rollback().catch(() => { });
         return responseModel.successResponse(1, `Establishment is already ${normalizedStatus ? "active" : "inactive"}`, {
           id,
           active_status: normalizedStatus
@@ -1229,9 +1155,8 @@ class EstablishmentController {
 
         // Add new if active
         if (normalizedStatus === 1 && isSearchable && establishment.name) {
-          const keyword = `${establishment.name} ${establishment.address || ""} ${
-            establishment.expertin || ""
-          }`
+          const keyword = `${establishment.name} ${establishment.address || ""} ${establishment.expertin || ""
+            }`
             .trim()
             .toLowerCase();
 
@@ -1275,13 +1200,11 @@ class EstablishmentController {
             });
 
             const entries = doctors.map((doc) => {
-              const name = `${doc.surnametype || ""} ${doc.first_name || ""} ${
-                doc.last_name || ""
-              }`.trim();
+              const name = `${doc.surnametype || ""} ${doc.first_name || ""} ${doc.last_name || ""
+                }`.trim();
 
-              const keyword = `${name} ${doc.expert_in || ""} ${
-                doc.designation || ""
-              }`
+              const keyword = `${name} ${doc.expert_in || ""} ${doc.designation || ""
+                }`
                 .toLowerCase()
                 .trim();
 
@@ -1322,7 +1245,7 @@ class EstablishmentController {
     } catch (err) {
       // Safe rollback — sirf agar transaction abhi bhi zinda hai
       if (t && !t.finished) {
-        await t.rollback().catch(() => {});
+        await t.rollback().catch(() => { });
       }
       console.error("Establishment updateStatus error:", err);
       return responseModel.failResponse(0, "Failed to update status", {}, err.message || "Unknown error");
@@ -1411,7 +1334,7 @@ class EstablishmentController {
         const establishmentToDelete = await EstablishmentModal.findByPk(id);
         if (establishmentToDelete) {
           await establishmentToDelete.destroy();
-          
+
           // Clean up search table — only for hospital/clinic/pharmacy
           try {
             const SearchModel = db.Search || db.search;

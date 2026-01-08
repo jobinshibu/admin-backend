@@ -34,7 +34,7 @@ const toBoolean = (val) => {
 };
 
 class ProfessionsController {
-  constructor() {}
+  constructor() { }
 
   async list(req) {
     try {
@@ -74,12 +74,12 @@ class ProfessionsController {
             where: specWhereClause,
             required: speciality && speciality > 0 ? true : false,
           },
-            
-    {
-      model: ProfessionWorkingHoursModal,
-      as: "working_hours", // Make sure this matches your alias
-      attributes: ["day_of_week", "start_time", "end_time", "is_day_off"]
-    },
+
+          {
+            model: ProfessionWorkingHoursModal,
+            as: "working_hours", // Make sure this matches your alias
+            attributes: ["day_of_week", "start_time", "end_time", "is_day_off"]
+          },
         ],
       });
 
@@ -119,7 +119,7 @@ class ProfessionsController {
       const propfessionsList = await ProfessionsModal.findAll({
         where: whereClause,
         raw: true,
-        attributes: ["id","surnametype", "first_name", "last_name"],
+        attributes: ["id", "surnametype", "first_name", "last_name"],
       });
       if (propfessionsList && propfessionsList.length > 0) {
         return responseModel.successResponse(
@@ -151,7 +151,7 @@ class ProfessionsController {
       const propfessionsList = await ProfessionsModal.findAll({
         where: whereClause,
         raw: true,
-        attributes: ["id","surnametype", "first_name", "last_name", 'photo', 'designation', 'email', 'phone'],
+        attributes: ["id", "surnametype", "first_name", "last_name", 'photo', 'designation', 'email', 'phone'],
       });
       if (propfessionsList && propfessionsList.length > 0) {
         return responseModel.successResponse(
@@ -216,7 +216,7 @@ class ProfessionsController {
 
 
   async store(req) {
-    try { 
+    try {
       console.log(req.body);
       const {
         profession_type_id,
@@ -266,7 +266,7 @@ class ProfessionsController {
           longitude = establishment.longitude || null;
         }
       }
-      
+
       let professionsData = {
         profession_type_id,
         licence_no,
@@ -295,10 +295,8 @@ class ProfessionsController {
         active_status: toBoolean(active_status),
         // created_by: req.user.id || 0,
       };
-      console.log("proffessiondata:",professionsData);
-      if (req.files?.["photo"]) {
-        professionsData.photo = req.files["photo"][0]["filename"];
-      }
+      console.log("proffessiondata:", professionsData);
+      professionsData.photo = null;
 
 
       const duplicateCheck = await ProfessionsModal.findOne({
@@ -339,39 +337,39 @@ class ProfessionsController {
         );
       }
 
-if (working_hours?.length) {
-  const formattedSlots = [];
+      if (working_hours?.length) {
+        const formattedSlots = [];
 
-  working_hours.forEach((day) => {
-    const isLeave = day.is_leave === true || day.is_leave === "1" || day.is_leave === 1;
+        working_hours.forEach((day) => {
+          const isLeave = day.is_leave === true || day.is_leave === "1" || day.is_leave === 1;
 
-    // Insert a single leave row if no sessions
-    if (isLeave || !day.sessions || day.sessions.length === 0) {
-      formattedSlots.push({
-        profession_id: saveData.id,
-        day_of_week: dayOfWeekMap[day.day_of_week],
-        is_day_off: true,
-        start_time: null,
-        end_time: null,
-      });
-    } else {
-      day.sessions.forEach((session) => {
-        if (!session.start_time || !session.end_time) {
-          throw new Error("Session missing start_time or end_time");
-        }
-        formattedSlots.push({
-          profession_id: saveData.id,
-          day_of_week: dayOfWeekMap[day.day_of_week],
-          start_time: session.start_time,
-          end_time: session.end_time,
-          is_day_off: false,
+          // Insert a single leave row if no sessions
+          if (isLeave || !day.sessions || day.sessions.length === 0) {
+            formattedSlots.push({
+              profession_id: saveData.id,
+              day_of_week: dayOfWeekMap[day.day_of_week],
+              is_day_off: true,
+              start_time: null,
+              end_time: null,
+            });
+          } else {
+            day.sessions.forEach((session) => {
+              if (!session.start_time || !session.end_time) {
+                throw new Error("Session missing start_time or end_time");
+              }
+              formattedSlots.push({
+                profession_id: saveData.id,
+                day_of_week: dayOfWeekMap[day.day_of_week],
+                start_time: session.start_time,
+                end_time: session.end_time,
+                is_day_off: false,
+              });
+            });
+          }
         });
-      });
-    }
-  });
-  console.log('Working hours formattedSlots:', formattedSlots);
-  await ProfessionWorkingHoursModal.bulkCreate(formattedSlots);
-}
+        console.log('Working hours formattedSlots:', formattedSlots);
+        await ProfessionWorkingHoursModal.bulkCreate(formattedSlots);
+      }
 
 
       const data = await ProfessionsModal.findOne({ where: { id: saveData.id } });
@@ -467,16 +465,7 @@ if (working_hours?.length) {
         active_status: toBoolean(active_status),
       };
 
-      if (req.files?.["photo"]) {
-        professionsData.photo = req.files["photo"][0]["filename"];
-        const existing = await ProfessionsModal.findOne({
-          where: { id },
-          attributes: ["photo"],
-        });
-        if (existing?.photo && fs.existsSync(`./uploads/professions/${existing.photo}`)) {
-          fs.unlinkSync(`./uploads/professions/${existing.photo}`);
-        }
-      }
+      professionsData.photo = null;
 
 
       await ProfessionsModal.update(professionsData, { where: { id } });
@@ -514,34 +503,34 @@ if (working_hours?.length) {
       }
 
       await ProfessionWorkingHoursModal.destroy({ where: { profession_id: id } });
-if (working_hours?.length) {
-  const formattedSlots = [];
+      if (working_hours?.length) {
+        const formattedSlots = [];
 
-  working_hours.forEach((day) => {
-    const isLeave = day.is_leave === true || day.is_leave === "1" || day.is_leave === 1;
+        working_hours.forEach((day) => {
+          const isLeave = day.is_leave === true || day.is_leave === "1" || day.is_leave === 1;
 
-    // Insert a single leave row if no sessions
-    if (isLeave || !day.sessions || day.sessions.length === 0) {
-      formattedSlots.push({
-        profession_id: id,
-        day_of_week: dayOfWeekMap[day.day_of_week],
-        is_day_off: true,
-      });
-    } else {
-      day.sessions.forEach((session) => {
-        formattedSlots.push({
-          profession_id: id,
-          day_of_week: dayOfWeekMap[day.day_of_week],
-          start_time: session.start_time,
-          end_time: session.end_time,
-          is_day_off: false,
+          // Insert a single leave row if no sessions
+          if (isLeave || !day.sessions || day.sessions.length === 0) {
+            formattedSlots.push({
+              profession_id: id,
+              day_of_week: dayOfWeekMap[day.day_of_week],
+              is_day_off: true,
+            });
+          } else {
+            day.sessions.forEach((session) => {
+              formattedSlots.push({
+                profession_id: id,
+                day_of_week: dayOfWeekMap[day.day_of_week],
+                start_time: session.start_time,
+                end_time: session.end_time,
+                is_day_off: false,
+              });
+            });
+          }
         });
-      });
-    }
-  });
 
-  await ProfessionWorkingHoursModal.bulkCreate(formattedSlots);
-}
+        await ProfessionWorkingHoursModal.bulkCreate(formattedSlots);
+      }
 
       // SEARCH SYNC: Update or remove from search
       try {
@@ -690,11 +679,11 @@ if (working_hours?.length) {
             as: "languagesList",
             include: [{ model: LanguageModel, as: "languageInfo" }],
           },
-              {
-      model: ProfessionWorkingHoursModal,
-      as: "working_hours", // Make sure this matches your alias
-      attributes: ["day_of_week", "start_time", "end_time", "is_day_off"]
-    },
+          {
+            model: ProfessionWorkingHoursModal,
+            as: "working_hours", // Make sure this matches your alias
+            attributes: ["day_of_week", "start_time", "end_time", "is_day_off"]
+          },
         ],
       });
 
@@ -733,12 +722,12 @@ if (working_hours?.length) {
       await ProfessionsLangugesModal.destroy({ where: { proffession_id: id } });
       await ProfessionEstablishmentModel.destroy({ where: { proffession_id: id } });
       await ProfessionWorkingHoursModal.destroy({ where: { profession_id: id } });
-      
+
       // Use instance method instead of static method to trigger hooks properly
       const professionToDelete = await ProfessionsModal.findByPk(id);
       if (professionToDelete) {
         await professionToDelete.destroy();
-        
+
         // Clean up search
         try {
           const SearchModel = db.Search || db.search;

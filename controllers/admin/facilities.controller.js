@@ -60,10 +60,8 @@ class FacilitiesController {
         let facData = {
           name: name,
           description: description,
+          icon: null,
         };
-        if (req.files && req.files["icon"]) {
-          facData.icon = req.files["icon"][0]["filename"];
-        }
         const savefacData = await FacilityModel.create(facData);
         return responseModel.successResponse(
           1,
@@ -99,39 +97,11 @@ class FacilitiesController {
       });
 
       if (getFacilityData == null) {
-        let facilityData;
-        if (req.files["icon"]) {
-          facilityData = {
-            name: name,
-            icon: req.files["icon"][0]["filename"],
-            description: description,
-          };
-        } else {
-          facilityData = {
-            name: name,
-            description: description,
-          };
-        }
-
-        if (req.files["icon"]) {
-          const getImage = await FacilityModel.findOne({
-            row: true,
-            where: { id: id },
-            attributes: ["icon"],
-          });
-
-          // Delete old image file if it exists
-          if (
-            getImage &&
-            getImage.dataValues.icon &&
-            fs.existsSync("./uploads/facilities/" + getImage.dataValues.icon)
-          )
-            fs.unlinkSync("./uploads/facilities/" + getImage.dataValues.icon);
-        }
-
-        // await FacilityModel.update(professionTypeData, {
-        //   where: { id: id },
-        // });
+        const facilityData = {
+          name: name,
+          description: description,
+          icon: null,
+        };
 
         const savefacData = await FacilityModel.update(facilityData, {
           where: { id: id },
