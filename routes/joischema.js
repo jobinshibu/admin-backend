@@ -124,6 +124,7 @@ const schemas = {
     name: Joi.string().required(),
     tier: Joi.number().required(),
     description: Joi.string().optional().allow(""),
+    icon: Joi.string().optional().allow(""),
   }),
   bannerAdd: Joi.object().keys({
     link: Joi.string().uri().required(),
