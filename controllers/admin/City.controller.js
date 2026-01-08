@@ -6,7 +6,7 @@ const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 
 class CityController {
-  constructor() {}
+  constructor() { }
   async list(req) {
     try {
       const { page_no, items_per_page, search_text } = req.query;

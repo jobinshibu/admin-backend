@@ -18,14 +18,14 @@ module.exports = function (sequelize, DataTypes) {
 
   InsurancePlanEstablishment.associate = function (models) {
     InsurancePlanEstablishment.belongsTo(models.insurance_plans, {
-        foreignKey: "plan_id",
-        as: "plan",
-      });
+      foreignKey: "plan_id",
+      as: "planInfo",
+    });
 
-      InsurancePlanEstablishment.belongsTo(models.establishments, {
-        foreignKey: "establishment_id",
-        as: "establishment",
-      });
+    InsurancePlanEstablishment.belongsTo(models.establishments, {
+      foreignKey: "establishment_id",
+      as: "establishment",
+    });
   };
   return InsurancePlanEstablishment;
 };

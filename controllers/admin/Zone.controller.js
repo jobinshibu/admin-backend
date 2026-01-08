@@ -6,7 +6,7 @@ const { getOffset } = require("../../utils/helper");
 const EstablishmentModal = db.establishments;
 
 class ZoneController {
-  constructor() {}
+  constructor() { }
   async list(req) {
     try {
       const { page_no, items_per_page, search_text } = req.query;

@@ -169,6 +169,11 @@ module.exports = function (sequelize, DataTypes) {
       as: 'insurancePlans'
     });
 
+    Establishment.hasMany(models.packages, {
+      foreignKey: 'establishment_id',
+      as: 'packages'
+    });
+
     Establishment.hasMany(models.pharmacy_inventories, {
       foreignKey: 'pharmacy_id',
       as: 'inventory'

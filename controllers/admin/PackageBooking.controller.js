@@ -5,9 +5,9 @@ const { getOffset } = require("../../utils/helper");
 const { Sequelize, Op } = require("sequelize");
 
 class PackageBookingController {
-    constructor() {}
+  constructor() { }
 
-async list(req) {
+  async list(req) {
     try {
       const { page_no, items_per_page, search_text } = req.query;
       const offset = getOffset(+page_no, +items_per_page);
@@ -57,7 +57,7 @@ async list(req) {
 
       // Decrypt all bookings
       if (bookings.count > 0) {
-        
+
         return responseModel.successResponse(
           1,
           "Bookings list successfully fetched",
@@ -113,7 +113,7 @@ async list(req) {
       });
 
       if (booking) {
-        
+
         return responseModel.successResponse(
           1,
           "Booking fetched successfully",
@@ -136,107 +136,107 @@ async list(req) {
   // Add or update comment to a booking
   async addComment(req) {
     try {
-        const { id } = req.params;
-        const { comment, status } = req.body;
+      const { id } = req.params;
+      const { comment, status } = req.body;
 
-        // 1. Find booking
-        const booking = await PackageBookingModel.findOne({
+      // 1. Find booking
+      const booking = await PackageBookingModel.findOne({
         where: { id },
         attributes: [
           'id',
           'comments',
           'booking_status',
         ]
-        });
+      });
 
-        if (!booking) {
+      if (!booking) {
         return responseModel.failResponse(0, "Booking not found", {});
-        }
+      }
 
-        // 2. Build update data
-        let updateData = {};
-        if (comment && comment.trim() !== "") {
+      // 2. Build update data
+      let updateData = {};
+      if (comment && comment.trim() !== "") {
         updateData.comments = comment.trim(); // ← correct column
-        }
-        if (status !== undefined) {
+      }
+      if (status !== undefined) {
         updateData.booking_status = status; // ← correct column
-        }
+      }
 
-        // 3. Update
-        await PackageBookingModel.update(updateData, { where: { id } });
+      // 3. Update
+      await PackageBookingModel.update(updateData, { where: { id } });
 
-        // 4. Fetch fresh updated booking
-        const updatedBooking = await PackageBookingModel.findOne({
+      // 4. Fetch fresh updated booking
+      const updatedBooking = await PackageBookingModel.findOne({
         where: { id },
         attributes: ['id', 'comments', 'booking_status'],
-        });
+      });
 
-        // 5. Build response
-        const hasComment = comment && comment.trim() !== "";
-        const hasStatus = status !== undefined;
+      // 5. Build response
+      const hasComment = comment && comment.trim() !== "";
+      const hasStatus = status !== undefined;
 
-        const message = hasComment && hasStatus
+      const message = hasComment && hasStatus
         ? "Comment and status updated successfully"
         : hasComment
-        ? "Comment updated successfully"
-        : hasStatus
-        ? "Status updated successfully"
-        : "No changes applied";
+          ? "Comment updated successfully"
+          : hasStatus
+            ? "Status updated successfully"
+            : "No changes applied";
 
-        return responseModel.successResponse(
+      return responseModel.successResponse(
         1,
         message,
         {
-            id: updatedBooking.id,
-            comment: updatedBooking.comments || null,
-            status: updatedBooking.booking_status,
+          id: updatedBooking.id,
+          comment: updatedBooking.comments || null,
+          status: updatedBooking.booking_status,
         }
-        );
+      );
     } catch (err) {
-        console.error('addComment error:', err);
-        const errMessage = typeof err === "string" ? err : err.message;
-        return responseModel.failResponse(
+      console.error('addComment error:', err);
+      const errMessage = typeof err === "string" ? err : err.message;
+      return responseModel.failResponse(
         0,
         "Error updating comment or status",
         {},
         errMessage
-        );
+      );
     }
   }
-  
-    // Delete a booking
-    async destroy(req) {
-      try {
-        const { id } = req.params;
-  
-        const booking = await PackageBookingModel.findOne({
-          where: { id: id },
-          attributes: ["id"]
-        });
-  
-        if (!booking) {
-          return responseModel.failResponse(0, "Booking not found", {});
-        }
-  
-        await PackageBookingModel.destroy({
-          where: { id: id },
-        });
-  
-        return responseModel.successResponse(
-          1,
-          "Booking deleted successfully",
-          {}
-        );
-      } catch (err) {
-        const errMessage = typeof err === "string" ? err : err.message;
-        return responseModel.failResponse(
-          0,
-          "Error deleting booking",
-          {},
-          errMessage
-        );
+
+  // Delete a booking
+  async destroy(req) {
+    try {
+      const { id } = req.params;
+
+      const booking = await PackageBookingModel.findOne({
+        where: { id: id },
+        attributes: ["id"]
+      });
+
+      if (!booking) {
+        return responseModel.failResponse(0, "Booking not found", {});
       }
+
+      await PackageBookingModel.destroy({
+        where: { id: id },
+      });
+
+      return responseModel.successResponse(
+        1,
+        "Booking deleted successfully",
+        {}
+      );
+    } catch (err) {
+      const errMessage = typeof err === "string" ? err : err.message;
+      return responseModel.failResponse(
+        0,
+        "Error deleting booking",
+        {},
+        errMessage
+      );
     }
+  }
 
 }
 

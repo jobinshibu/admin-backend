@@ -91,7 +91,6 @@ class BookingsController {
 
       const bookings = await BookingsModel.findAndCountAll({
         attributes: [
-          "id",
           "booking_id",
           "customer_id",
           "doctor_id",
