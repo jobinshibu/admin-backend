@@ -37,7 +37,7 @@ const toBoolean = (val) => {
 };
 
 class EstablishmentController {
-  constructor() { }
+  constructor() {}
 
   // all Establishment Type list
   async list(req) {
@@ -357,13 +357,13 @@ class EstablishmentController {
       zone_id: zone_id,
       expertin: expertin,
       pin_code: pin_code,
-      latitude: latitude || null,
+      latitude: latitude  || null,
       longitude: longitude || null,
       email: email,
       // primary_photo: req.files["primary_photo"][0]["filename"],
       mobile_country_code: mobile_country_code,
       contact_number: contact_number,
-      is_24_by_7_working: toBoolean(is_24_by_7_working) ? 1 : 0,
+      is_24_by_7_working: toBoolean(is_24_by_7_working),
       healineVerified: toBoolean(healineVerified),
       topRated: toBoolean(topRated),
       topRatedTitle: topRatedTitle || null,
@@ -941,7 +941,7 @@ class EstablishmentController {
         topRatedTitle: topRatedTitle || null,
         mobile_country_code,
         contact_number,
-        is_24_by_7_working: toBoolean(is_24_by_7_working) ? 1 : 0,
+        is_24_by_7_working: toBoolean(is_24_by_7_working),
         active_status: toBoolean(active_status),
       };
 
@@ -1068,7 +1068,7 @@ class EstablishmentController {
           if (!SearchModel) throw new Error("Search model not found");
 
           const newStatus = toBoolean(active_status);
-          const typeRecord = establishment_type
+          const typeRecord = establishment_type 
             ? await EstablishmentTypeModal.findByPk(establishment_type, { attributes: ['name'] })
             : null;
 
@@ -1159,7 +1159,7 @@ class EstablishmentController {
 
       // Validation
       if (!id || active_status === undefined || active_status === null) {
-        if (t) await t.rollback().catch(() => { });
+        if (t) await t.rollback().catch(() => {});
         return responseModel.validationError(0, "id and active_status are required");
       }
 
@@ -1176,13 +1176,13 @@ class EstablishmentController {
       });
 
       if (!establishment) {
-        if (t) await t.rollback().catch(() => { });
+        if (t) await t.rollback().catch(() => {});
         return responseModel.notFound(0, "Establishment not found");
       }
 
       // Agar status already same hai
       if (establishment.active_status === normalizedStatus) {
-        if (t) await t.rollback().catch(() => { });
+        if (t) await t.rollback().catch(() => {});
         return responseModel.successResponse(1, `Establishment is already ${normalizedStatus ? "active" : "inactive"}`, {
           id,
           active_status: normalizedStatus
@@ -1229,8 +1229,9 @@ class EstablishmentController {
 
         // Add new if active
         if (normalizedStatus === 1 && isSearchable && establishment.name) {
-          const keyword = `${establishment.name} ${establishment.address || ""} ${establishment.expertin || ""
-            }`
+          const keyword = `${establishment.name} ${establishment.address || ""} ${
+            establishment.expertin || ""
+          }`
             .trim()
             .toLowerCase();
 
@@ -1274,11 +1275,13 @@ class EstablishmentController {
             });
 
             const entries = doctors.map((doc) => {
-              const name = `${doc.surnametype || ""} ${doc.first_name || ""} ${doc.last_name || ""
-                }`.trim();
+              const name = `${doc.surnametype || ""} ${doc.first_name || ""} ${
+                doc.last_name || ""
+              }`.trim();
 
-              const keyword = `${name} ${doc.expert_in || ""} ${doc.designation || ""
-                }`
+              const keyword = `${name} ${doc.expert_in || ""} ${
+                doc.designation || ""
+              }`
                 .toLowerCase()
                 .trim();
 
@@ -1319,7 +1322,7 @@ class EstablishmentController {
     } catch (err) {
       // Safe rollback — sirf agar transaction abhi bhi zinda hai
       if (t && !t.finished) {
-        await t.rollback().catch(() => { });
+        await t.rollback().catch(() => {});
       }
       console.error("Establishment updateStatus error:", err);
       return responseModel.failResponse(0, "Failed to update status", {}, err.message || "Unknown error");
@@ -1408,7 +1411,7 @@ class EstablishmentController {
         const establishmentToDelete = await EstablishmentModal.findByPk(id);
         if (establishmentToDelete) {
           await establishmentToDelete.destroy();
-
+          
           // Clean up search table — only for hospital/clinic/pharmacy
           try {
             const SearchModel = db.Search || db.search;

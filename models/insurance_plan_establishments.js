@@ -1,39 +1,31 @@
+require("dotenv").config();
+const Image_URL = `${process.env.BASE_URL}`;
 module.exports = function (sequelize, DataTypes) {
-    const InsurancePlanEstablishments = sequelize.define(
-        "insurance_plan_establishments",
-        {
-            id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                autoIncrement: true,
-            },
-            plan_id: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            establishment_id: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            }
-        },
-        {
-            tableName: "insurance_plan_establishments",
-            timestamps: true,
-            updatedAt: "updated_at",
-            createdAt: "created_at",
-        }
-    );
+  const InsurancePlanEstablishment = sequelize.define(
+    "insurance_plan_establishments",
+    {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      plan_id: DataTypes.INTEGER,
+      establishment_id: DataTypes.INTEGER,
+    },
+    {
+      updatedAt: "updated_at",
+      createdAt: "created_at",
+      deletedAt: "deleted_at",
+      paranoid: true,
+    }
+  );
 
-    InsurancePlanEstablishments.associate = function (models) {
-        InsurancePlanEstablishments.belongsTo(models.insurance_plans, {
-            foreignKey: "plan_id",
-            as: "planInfo",
-        });
-        InsurancePlanEstablishments.belongsTo(models.establishments, {
-            foreignKey: "establishment_id",
-            as: "establishment",
-        });
-    };
+  InsurancePlanEstablishment.associate = function (models) {
+    InsurancePlanEstablishment.belongsTo(models.insurance_plans, {
+        foreignKey: "plan_id",
+        as: "plan",
+      });
 
-    return InsurancePlanEstablishments;
+      InsurancePlanEstablishment.belongsTo(models.establishments, {
+        foreignKey: "establishment_id",
+        as: "establishment",
+      });
+  };
+  return InsurancePlanEstablishment;
 };

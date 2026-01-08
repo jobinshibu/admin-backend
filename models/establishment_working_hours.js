@@ -1,47 +1,39 @@
+require("dotenv").config();
+
 module.exports = function (sequelize, DataTypes) {
-    const EstablishmentWorkingHours = sequelize.define(
-        "establishment_working_hours",
-        {
-            id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                autoIncrement: true,
-            },
-            establishment_id: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            day_of_week: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            start_time: {
-                type: DataTypes.STRING(50),
-                allowNull: true,
-            },
-            end_time: {
-                type: DataTypes.STRING(50),
-                allowNull: true,
-            },
-            is_day_off: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false,
-            }
-        },
-        {
-            tableName: "establishment_working_hours",
-            timestamps: true,
-            updatedAt: "updated_at",
-            createdAt: "created_at",
-        }
-    );
+  const establishmentWorkingHours = sequelize.define(
+    "establishment_working_hours",
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      establishment_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      day_of_week: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      start_time: {
+        type: DataTypes.STRING(255),
+      },
+      end_time: {
+        type: DataTypes.STRING(255),
+      },
+      is_day_off: {
+        type: DataTypes.STRING(255),
+        defaultValue: "0",
+      },
+    },
+    {
+      updatedAt: "updated_at",
+      createdAt: "created_at",
+      deletedAt: "deleted_at",
+    }
+  );
 
-    EstablishmentWorkingHours.associate = function (models) {
-        EstablishmentWorkingHours.belongsTo(models.establishments, {
-            foreignKey: "establishment_id",
-            as: "establishment",
-        });
-    };
-
-    return EstablishmentWorkingHours;
+  return establishmentWorkingHours;
 };

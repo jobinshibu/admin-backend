@@ -65,10 +65,17 @@ app.use(express.urlencoded({ extended: true }));
 
 // admin route
 app.use("/api/admin", require("./routes/admin/index.routes"));
+app.use("/api/admin/notify", require("./routes/admin/notify.router"));
+
+// checkLog(app);
 
 const server = app.listen(port, () => {
   console.log(`The demo app is up on port ${port}`);
 });
+
+// Initialize Promotion Scheduler
+const { initializeScheduler } = require('./services/promotion_scheduler');
+initializeScheduler();
 
 initSocket(server);
 

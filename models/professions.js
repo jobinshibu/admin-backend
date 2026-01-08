@@ -80,21 +80,21 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true,
       },
       online_consultation: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
+        type: DataTypes.STRING(255),
+        defaultValue: "1",
       },
       healineVerified: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
       },
       recommended: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
       },
       topRated: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
-        defaultValue: false
+        defaultValue: "0"
       },
       topRatedTitle: {
         type: DataTypes.STRING(255),
@@ -105,12 +105,12 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true,
       },
       available: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
+        type: DataTypes.STRING(255),
+        defaultValue: "1",
       },
       active_status: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.STRING(255),
+        defaultValue: "0",
       },
       latitude: {
         type: DataTypes.DECIMAL(10, 8),
@@ -145,9 +145,9 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "proffession_id",
       as: "specialitiesList",
     });
-    Professions.hasMany(models.profession_working_hours, {
-      foreignKey: "profession_id",
-      as: "working_hours",
+    Professions.hasMany(models.professions_departments, {
+      foreignKey: "proffession_id",
+      as: "professionsEstablishmentList",
     });
     Professions.hasMany(models.professions_services, {
       foreignKey: "proffession_id",
@@ -157,9 +157,36 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "proffession_id",
       as: "languagesList",
     });
-    Professions.hasMany(models.professions_departments, {
-      foreignKey: "proffession_id",
-      as: "professionsEstablishmentList",
+    Professions.hasMany(models.profession_working_hours, {
+      foreignKey: "profession_id",
+      as: "working_hours",
+    });
+
+
+    // === SEARCH SYNC HOOKS FOR DOCTORS ===
+
+    Professions.afterCreate(async (profession, options) => {
+      try {
+        const SearchModel = models.Search || models.search;
+        if (!SearchModel) return;
+
+        // Only add to search if active
+        if (!toBoolean(profession.active_status)) return;
+
+        const fullName = `${profession.surnametype || ''} ${profession.first_name || ''} ${profession.last_name || ''}`.trim();
+        const keyword = `${fullName} ${profession.expert_in || ''} ${profession.designation || ''}`.toLowerCase().trim();
+
+        await SearchModel.create({
+          name: fullName || 'Doctor',
+          keyword: keyword.slice(0, 255),
+          type: 'doctor',
+          reference_id: profession.id,
+          search_count: 0
+        }, { transaction: options.transaction });
+
+      } catch (err) {
+        console.error('Profession afterCreate search sync failed:', err.message);
+      }
     });
   };
 

@@ -80,25 +80,25 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true
       },
       healineVerified: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
       },
       recommended: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
       },
       topRated: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING(255),
         allowNull: true,
-        defaultValue: false
+        defaultValue: "0"
       },
       topRatedTitle: {
         type: DataTypes.STRING(255),
         allowNull: true
       },
       active_status: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.STRING(255),
+        defaultValue: "0",
       },
       primary_photo: {
         type: DataTypes.STRING(255),
@@ -116,6 +116,26 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Establishment.associate = function (models) {
+    Establishment.hasMany(models.establishment_images, {
+      foreignKey: "establishment_id",
+      as: "imageList",
+    });
+    Establishment.hasMany(models.establishment_professions, {
+      foreignKey: "establishment_id",
+      as: "professionsList",
+    });
+    Establishment.hasMany(models.establishment_specialities, {
+      foreignKey: "establishment_id",
+      as: "specialitiesList",
+    });
+    Establishment.hasMany(models.establishment_facilities, {
+      foreignKey: "establishment_id",
+      as: "facilitiesList",
+    });
+    Establishment.hasMany(models.establishment_services, {
+      foreignKey: "establishment_id",
+      as: "servicesList",
+    });
     Establishment.belongsTo(models.establishment_types, {
       foreignKey: "establishment_type",
       as: "establishmentTypeInfo",
@@ -132,37 +152,92 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "city_id",
       as: "cityInfo",
     });
-    Establishment.hasMany(models.establishment_images, {
-      foreignKey: "establishment_id",
-      as: "imageList",
-    });
-    Establishment.hasMany(models.establishment_banner_images, {
-      foreignKey: "establishment_id",
-      as: "bannerImageList",
-    });
     Establishment.hasMany(models.establishment_working_hours, {
       foreignKey: "establishment_id",
       as: "workingHoursDetails",
-    });
-    Establishment.hasMany(models.establishment_specialities, {
-      foreignKey: "establishment_id",
-      as: "specialitiesList",
-    });
-    Establishment.hasMany(models.establishment_facilities, {
-      foreignKey: "establishment_id",
-      as: "facilitiesList",
-    });
-    Establishment.hasMany(models.establishment_services, {
-      foreignKey: "establishment_id",
-      as: "servicesList",
     });
     Establishment.hasMany(models.professions_departments, {
       foreignKey: "establishment_id",
       as: "departmentList",
     });
-    Establishment.hasMany(models.insurance_plan_establishments, {
+    Establishment.hasMany(models.establishment_banner_images, {
       foreignKey: "establishment_id",
-      as: "insurancePlansList",
+      as: "bannerImageList",
+    });
+    Establishment.hasMany(models.insurance_plan_establishments, {
+      foreignKey: 'establishment_id',
+      as: 'insurancePlans'
+    });
+
+    Establishment.hasMany(models.pharmacy_inventories, {
+      foreignKey: 'pharmacy_id',
+      as: 'inventory'
+    });
+
+    Establishment.belongsToMany(models.pharmacy_products, {
+      through: models.pharmacy_inventories,
+      foreignKey: 'pharmacy_id',
+      otherKey: 'product_id',
+      as: 'products'
+    });
+
+    Establishment.hasMany(models.pillpack_medicines, {
+      foreignKey: 'pharmacy_id',
+      as: 'pillpack_medicines'
+    });
+
+
+    const SEARCHABLE_TYPES = ['Hospital', 'Clinic', 'Pharmacy'];
+
+    // Helper to determine if type is searchable and get correct lowercase type
+    const getSearchType = async (establishment, transaction) => {
+      if (!establishment.establishment_type) return null;
+
+      const typeRecord = await models.establishment_types.findByPk(
+        establishment.establishment_type,
+        {
+          attributes: ['name'],
+          transaction
+        }
+      );
+
+      if (!typeRecord) return null;
+
+      const typeName = typeRecord.name.trim();
+      if (SEARCHABLE_TYPES.includes(typeName)) {
+        return typeName.toLowerCase(); // 'hospital', 'clinic', 'pharmacy'
+      }
+      return null; // Laboratory, Others, etc. → not searchable
+    };
+
+    // === AFTER CREATE ===
+    Establishment.afterCreate(async (establishment, options) => {
+      try {
+        const searchModel = models.Search || models.search;
+        if (!searchModel) return;
+
+        const transaction = options.transaction;
+
+        const searchType = await getSearchType(establishment, transaction);
+        if (!searchType || establishment.active_status !== true && establishment.active_status !== 1) {
+          return; // Don't add inactive or non-searchable types
+        }
+
+        const name = (establishment.name || '').trim();
+        const keyword = `${name} ${establishment.address || ''} ${establishment.expertin || ''}`
+          .toLowerCase().trim();
+
+        await searchModel.create({
+          name,
+          keyword: keyword.slice(0, 255),
+          type: searchType,
+          reference_id: establishment.id,
+          search_count: 0
+        }, { transaction });
+
+      } catch (error) {
+        console.error('Establishment afterCreate search sync failed:', error);
+      }
     });
   };
 
