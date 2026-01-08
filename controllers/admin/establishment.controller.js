@@ -1089,7 +1089,7 @@ class EstablishmentController {
         return responseModel.validationError(0, "id and active_status are required");
       }
 
-      const normalizedStatus = active_status == true || active_status === "true" || active_status === 1 || active_status === "1" ? 1 : 0;
+      const normalizedStatus = toBoolean(active_status);
 
       const establishment = await EstablishmentModal.findByPk(id, {
         attributes: ["id", "name", "active_status", "establishment_type", "address", "expertin"],

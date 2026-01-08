@@ -80,32 +80,36 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: true
       },
       healineVerified: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.BOOLEAN,
         allowNull: true,
+        defaultValue: false
       },
       recommended: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.BOOLEAN,
         allowNull: true,
+        defaultValue: false
       },
       topRated: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.BOOLEAN,
         allowNull: true,
-        defaultValue: "0"
+        defaultValue: false
       },
       topRatedTitle: {
         type: DataTypes.STRING(255),
         allowNull: true
       },
       active_status: {
-        type: DataTypes.STRING(255),
-        defaultValue: "0",
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false,
       },
       primary_photo: {
         type: DataTypes.STRING(255),
       },
       is_24_by_7_working: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BOOLEAN,
         allowNull: true,
+        defaultValue: false
       },
     },
     {
