@@ -15,6 +15,7 @@ const config = require("config"),
 
 const UserModel = db.users;
 
+
 class AuthController {
   constructor() {}
 
