@@ -10,26 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Decode PEM Key
-      run: |
-        echo "${{ secrets.EC2_KEY }}" | base64 -d > key.pem
-        chmod 600 key.pem
+      - name: Prepare SSH key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" | base64 -d > ec2_key.pem
+          chmod 600 ec2_key.pem
 
-    - name: Rsync project to EC2 (excluding uploads)
-      run: |
-        rsync -avz --delete \
-          --exclude 'uploads/' \
-          -e "ssh -o StrictHostKeyChecking=no -i key.pem" \
-          ./ \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/adminapis/
+      - name: Sync code to EC2 (exclude runtime files)
+        run: |
+          rsync -avz --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude '.env' \
+            --exclude 'uploads/' \
+            -e "ssh -o StrictHostKeyChecking=no -i ec2_key.pem" \
+            ./ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/adminapis/
 
-    - name: SSH into EC2 and restart service
-      run: |
-        ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd ~/adminapis
-          npm install --production
-          pm2 restart admin-apis || pm2 start index.js --name admin-apis
-        EOF
+      - name: Install dependencies & restart app
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/ubuntu/adminapis
+            npm install --omit=dev
+            pm2 restart admin-apis || pm2 start index.js --name admin-apis
+            pm2 save
+          EOF
