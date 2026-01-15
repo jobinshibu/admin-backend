@@ -1,0 +1,44 @@
+{
+    "mysql": {
+      "host": "dev-healine.ccwprz2lsvji.ap-south-1.rds.amazonaws.com",
+      "user": "admin",
+      "password": "H3alineR##t",
+      "db": "healine",
+      "dialect": "mysql",
+      "pool": {
+        "max": 5,
+        "min": 0,
+        "acquire": 30000,
+        "idle": 10000
+      }
+    },
+    "development": {
+      "username": "root",
+      "password": null,
+      "database": "themis",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "configuration": {
+      "host": "http://localhost",
+      "port": 5710,
+      "securePort": 443,
+      "httpHeaders": {
+        "names": {
+          "contentType": "Content-Type"
+        },
+        "values": {
+          "appJson": "application/json"
+        }
+      },
+      "jwt": {
+        "secret": "R3^re$_r39a!@G",
+        "algorithm": "HS256",
+        "tokenLife": "365d",
+        "issuer": "!612A94@9p",
+        "audience": "",
+        "subject": ""
+      }
+    }
+  }
+  

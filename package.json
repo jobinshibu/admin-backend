@@ -1,0 +1,48 @@
+{
+  "name": "healine-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm i && nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://RK4645@bitbucket.org/sumitdesai307/healine-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://bitbucket.org/sumitdesai307/healine-api/issues"
+  },
+  "homepage": "https://bitbucket.org/sumitdesai307/healine-api#readme",
+  "dependencies": {
+    "-": "^0.0.1",
+    "@hapi/joi": "^17.1.1",
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
+    "config": "^3.3.8",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "fast-csv": "^5.0.1",
+    "firebase-admin": "^13.6.0",
+    "fs": "^0.0.1-security",
+    "g": "^2.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^2.3.3",
+    "node-cron": "^4.2.1",
+    "path": "^0.12.7",
+    "process": "^0.11.10",
+    "sequelize": "^6.28.0",
+    "socket.io": "^4.8.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.5.2"
+  }
+}

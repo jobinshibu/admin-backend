@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "root",
+    "password": "8932",
+    "database": "healine",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "admin",
+    "password": "H3alineR##t",
+    "database": "healine",
+    "host": "dev-healine.ccwprz2lsvji.ap-south-1.rds.amazonaws.com",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "appuser",
+    "password": "StrongPassword",
+    "database": "admin_backend",
+    "host": "admin-backend.cf8ycm884mxh.me-central-1.rds.amazonaws.com",
+    "port": "3306",
+    "dialect": "mysql"
+  }
+}
