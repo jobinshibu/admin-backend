@@ -8,10 +8,16 @@ const { AdminRoute } = require("../../controllers");
 const AdminAuth = require("../../middleware");
 
 const professions = new AdminRoute.professionCtrl.ProfessionsController();
+const fs = require("fs");
+
+const uploadDir = "./uploads/professions";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/professions");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     console.log(

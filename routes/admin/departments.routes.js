@@ -8,10 +8,16 @@ const multer = require("multer");
 const path = require("path");
 
 const departments = new AdminRoute.deptCtrl.DepartmentsController();
+const fs = require("fs");
+
+const uploadDir = "./uploads/departments";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/departments");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     console.log(

@@ -8,10 +8,16 @@ const multer = require("multer");
 const path = require("path");
 
 const healthTest = new AdminRoute.healthTestCtrl.HealthTestController();
+const fs = require("fs");
+
+const uploadDir = "./uploads/healthTests";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/healthTests");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     console.log(

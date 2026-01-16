@@ -7,16 +7,17 @@ const joivalidate = require("../joivalidate");
 const { AdminRoute } = require("../../controllers");
 
 const packages = new AdminRoute.packageCtrl.PackagesController();
+const fs = require('fs');
+
+const uploadDir = './uploads/packages';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // ✅ FIXED: SINGLE UPLOAD FOR ONE IMAGE
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // ✅ CREATE FOLDER IF NOT EXISTS
-    const fs = require('fs');
-    if (!fs.existsSync('./uploads/packages')) {
-      fs.mkdirSync('./uploads/packages', { recursive: true });
-    }
-    cb(null, "./uploads/packages");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     cb(
@@ -39,8 +40,8 @@ const multerFilter = (req, file, cb) => {
 };
 
 // ✅ FIXED: SINGLE UPLOAD
-let PackagesFile = multer({ 
-  storage: storage, 
+let PackagesFile = multer({
+  storage: storage,
   fileFilter: multerFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
