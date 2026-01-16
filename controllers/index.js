@@ -50,6 +50,7 @@ let AdminRoute = {
   packageBundlePurchaseCtrl: require("./admin/packageBundlePurchase.controller"),
   b2bBundleCtrl: require("./admin/b2bBundle.controller"),
   pillpackCtrl: require("./admin/pillpack.controller"),
+  
   // roleCtrl: require("./admin/role.controller"),
 
   // categoryCtrl: require("./admin/category.controller"),
