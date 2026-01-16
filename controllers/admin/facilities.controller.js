@@ -9,7 +9,7 @@ const { getOffset } = require("../../utils/helper");
 const EstablishmentFacilitiesModal = db.establishment_facilities;
 
 class FacilitiesController {
-  constructor() {}
+  constructor() { }
   async list(req) {
     try {
       const { page_no, items_per_page, search_text } = req.query;
@@ -52,7 +52,9 @@ class FacilitiesController {
       const { name, description } = req.body;
 
       let facData = { name: name };
-      if (req.files["icon"]) {
+      const iconFile = req.files["icon"] || req.files["image"];
+
+      if (iconFile) {
         const facDetail = await FacilityModel.findOne({
           where: facData,
           attributes: ["id", "name"],
@@ -61,7 +63,7 @@ class FacilitiesController {
         if (facDetail == null) {
           let facData = {
             name: name,
-            icon: req.files["icon"][0]["filename"],
+            icon: iconFile[0]["filename"],
             description: description,
           };
           const savefacData = await FacilityModel.build(
@@ -105,10 +107,12 @@ class FacilitiesController {
 
       if (getFacilityData == null) {
         let facilityData;
-        if (req.files["icon"]) {
+        const iconFile = req.files["icon"] || req.files["image"];
+
+        if (iconFile) {
           facilityData = {
             name: name,
-            icon: req.files["icon"][0]["filename"],
+            icon: iconFile[0]["filename"],
             description: description,
           };
         } else {
@@ -118,7 +122,7 @@ class FacilitiesController {
           };
         }
 
-        if (req.files["icon"]) {
+        if (iconFile) {
           const getImage = await FacilityModel.findOne({
             row: true,
             where: { id: id },
