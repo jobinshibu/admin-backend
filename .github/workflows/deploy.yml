@@ -15,7 +15,7 @@ jobs:
 
       - name: Prepare SSH key
         run: |
-          echo "${{ secrets.EC2_KEY }}" | base64 -d > ec2_key.pem
+          echo "${{ secrets.EC2_KEY }}" | base64 --decode > ec2_key.pem
           chmod 600 ec2_key.pem
 
       - name: Sync code to EC2 (exclude runtime files)
@@ -28,14 +28,14 @@ jobs:
             --exclude 'uploads/' \
             -e "ssh -o StrictHostKeyChecking=no -i ec2_key.pem" \
             ./ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/adminapis/
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/admin-backend/
 
       - name: Install dependencies & restart app
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/adminapis
+            cd /home/ubuntu/admin-backend
             npm install --omit=dev
-            pm2 restart admin-apis || pm2 start index.js --name admin-apis
+            pm2 restart admin-backend || pm2 start index.js --name admin-backend
             pm2 save
           EOF
