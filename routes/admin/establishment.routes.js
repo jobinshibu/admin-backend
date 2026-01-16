@@ -7,12 +7,18 @@ const joivalidate = require("../joivalidate");
 const { AdminRoute } = require("../../controllers");
 const AdminAuth = require("../../middleware");
 
+const fs = require("fs");
 const establishment =
   new AdminRoute.establishmentCtrl.EstablishmentController();
 
+const uploadDir = "./uploads/establishment";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/establishment");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     console.log(

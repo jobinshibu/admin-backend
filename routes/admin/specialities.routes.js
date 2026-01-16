@@ -7,12 +7,18 @@ const joivalidate = require("../joivalidate");
 const { AdminRoute } = require("../../controllers");
 const AdminAuth = require("./../../middleware");
 
+const fs = require("fs");
 const specialities = new AdminRoute.specialitiesCtrl.SpecialitiesController();
+
+const uploadDir = "./uploads/specialities";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     console.log("storage call");
-    cb(null, "./uploads/specialities");
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     console.log("file4", file);
