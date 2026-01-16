@@ -78,7 +78,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
         references: {
-          model: 'package_category',
+          model: 'package_categories',
           key: 'id'
         }
       },
