@@ -64,12 +64,7 @@ module.exports = function (sequelize, DataTypes) {
       },
       image: {
         type: DataTypes.STRING(255),
-        get() {
-          const rawValue = this.getDataValue('icon');
-          return rawValue
-            ? process.env.IMAGE_PATH + 'service/' + rawValue
-            : null;
-        }
+        allowNull: true,
       },
     },
     {
@@ -125,13 +120,16 @@ module.exports = function (sequelize, DataTypes) {
   //   });
   // });
 
-  // Services.prototype.toJSON = function () {
-  //   const service = this.get();
-  //   if (service.image) {
-  //     service.image = `${Image_URL}/services/${service.image}`;
-  //   }
-  //   return service;
-  // };
+  Services.prototype.toJSON = function () {
+    const service = this.get();
+    if (service.image) {
+      const filename = service.image.split('/').pop();
+      const basePath = process.env.IMAGE_PATH || "http://localhost:5710";
+      const normalizedBasePath = basePath.endsWith('/') ? basePath : basePath + '/';
+      service.image = normalizedBasePath + "services/" + filename;
+    }
+    return service;
+  };
 
   return Services;
 };
