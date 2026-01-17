@@ -1,5 +1,5 @@
 require("dotenv").config();
-const Image_URL = `${process.env.IMAGE_PATH}`;
+const Image_URL = `${process.env.BASE_URL}`;
 
 module.exports = function (sequelize, DataTypes) {
   const Services = sequelize.define(
@@ -64,7 +64,12 @@ module.exports = function (sequelize, DataTypes) {
       },
       image: {
         type: DataTypes.STRING(255),
-        allowNull: true,
+        get() {
+          const rawValue = this.getDataValue('icon');
+          return rawValue
+            ? process.env.IMAGE_PATH + 'service/' + rawValue
+            : null;
+        }
       },
     },
     {
@@ -120,13 +125,13 @@ module.exports = function (sequelize, DataTypes) {
   //   });
   // });
 
-  Services.prototype.toJSON = function () {
-    const service = this.get();
-    if (service.image) {
-      service.image = `${Image_URL}/services/${service.image}`;
-    }
-    return service;
-  };
+  // Services.prototype.toJSON = function () {
+  //   const service = this.get();
+  //   if (service.image) {
+  //     service.image = `${Image_URL}/services/${service.image}`;
+  //   }
+  //   return service;
+  // };
 
   return Services;
 };
