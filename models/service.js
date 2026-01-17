@@ -1,5 +1,5 @@
 require("dotenv").config();
-const Image_URL = `${process.env.BASE_URL}`;
+const Image_URL = `${process.env.IMAGE_PATH}`;
 
 module.exports = function (sequelize, DataTypes) {
   const Services = sequelize.define(
