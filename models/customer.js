@@ -120,6 +120,10 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'caregiver_id',
       as: 'caregivers'
     });
+    Customers.hasMany(models.my_garage, {
+      foreignKey: 'customer_id',
+      as: 'my_garage'
+    });
   };
 
   Customers.prototype.toJSON = function () {

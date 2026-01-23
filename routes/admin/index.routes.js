@@ -126,6 +126,11 @@ router.use(
   // [AdminAuth.AdminAuth],
   require("./model.routes")
 );
+router.use(
+  "/my-garage",
+  // [AdminAuth.AdminAuth],
+  require("./myGarage.routes")
+);
 router.use("/common",
   // [AdminAuth.AdminAuth], 
   require("./common.routes")
