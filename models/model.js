@@ -25,7 +25,7 @@ module.exports = function (sequelize, DataTypes) {
       variant: {
         type: DataTypes.STRING(100),
         allowNull: true
-      },
+      }
     },
     {
       updatedAt: "updated_at",
