@@ -316,6 +316,13 @@ const schemas = {
     icon: Joi.string().optional().allow(""),
   }),
 
+  modelValidator: Joi.object().keys({
+    name: Joi.string().required(),
+    brand_id: Joi.number().required(),
+    transmission_type: Joi.string().optional().allow("", null),
+    variant: Joi.string().optional().allow("", null),
+  }),
+
   servicesValidator: Joi.object().keys({
     name: Joi.string().required(),
     serviceType: Joi.string().allow("forWomen", "forMen", "forKid", "forSeniors", "nursingService").optional(),

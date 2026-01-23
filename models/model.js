@@ -2,25 +2,30 @@ require("dotenv").config();
 const Image_URL = `${process.env.BASE_URL}`;
 
 module.exports = function (sequelize, DataTypes) {
-  const Brand = sequelize.define(
-    "brands",
+  const Model = sequelize.define(
+    "models",
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
       },
+      brand_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       name: {
         type: DataTypes.STRING(100),
         allowNull: false
       },
-      icon: {
-        type: DataTypes.STRING(255)
-      },
-      description: {
-        type: DataTypes.STRING(500),
+      transmission_type: {
+        type: DataTypes.STRING(100),
         allowNull: true
-      }
+      },
+      variant: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+      },
     },
     {
       updatedAt: "updated_at",
@@ -29,18 +34,13 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  Brand.associate = function (models) {
-    Brand.hasMany(models.models, {
+  Model.associate = function (models) {
+    Model.belongsTo(models.brands, {
       foreignKey: "brand_id",
-      as: "models",
+      as: "brand",
     });
   };
 
-  Brand.prototype.toJSON = function () {
-    const Brand = this.get();
-    Brand.icon = process.env.IMAGE_PATH + "brands/" + Brand.icon;
-    return Brand;
-  };
-
-  return Brand;
+  
+  return Model;
 };

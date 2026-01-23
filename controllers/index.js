@@ -23,7 +23,7 @@ let AdminRoute = {
   establishmentBannerImagesCtrl: require("./admin/establishmentBannerImage.controller"),
   departmentWorkingCtrl: require("./admin/departmentWorkingHours.controller"),
   FacilitiesCtrl: require("./admin/facilities.controller"),
-  BrandsCtrl: require("./admin/brands.controller"), 
+  BrandsCtrl: require("./admin/brands.controller"),
   ServicesCtrl: require("./admin/services.controller"),
   LanguagesCtrl: require("./admin/languages.controller"),
   commonCtrl: require("./admin/common.controller"),
@@ -50,6 +50,7 @@ let AdminRoute = {
   packageBundlePurchaseCtrl: require("./admin/packageBundlePurchase.controller"),
   b2bBundleCtrl: require("./admin/b2bBundle.controller"),
   pillpackCtrl: require("./admin/pillpack.controller"),
+  ModelCtrl: require("./admin/model.controller"),
 
   // roleCtrl: require("./admin/role.controller"),
   // categoryCtrl: require("./admin/category.controller"),

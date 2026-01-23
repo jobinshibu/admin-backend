@@ -121,6 +121,11 @@ router.use(
   // [AdminAuth.AdminAuth],
   require("./brands.routes")
 );
+router.use(
+  "/models",
+  // [AdminAuth.AdminAuth],
+  require("./model.routes")
+);
 router.use("/common",
   // [AdminAuth.AdminAuth], 
   require("./common.routes")
