@@ -21,7 +21,7 @@ const facilitiesModal = db.facilities;
 const brandsModal = db.brands;
 const ProfessionsModal = db.professions;
 const { imageUploadService } = require("../../services/");
-let { Sequelize, Op } = require("sequelize");
+let { Sequelize, Op, or } = require("sequelize");
 const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 const path = require("path");
@@ -102,6 +102,7 @@ class EstablishmentController {
       ],
       where: whereClouse,
       distinct: true,
+      order: [["created_at", "DESC"]],
       offset: offset,
       limit: +items_per_page,
     });

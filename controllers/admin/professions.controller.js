@@ -62,6 +62,7 @@ class ProfessionsController {
         limit: +items_per_page,
         where: whereClouse,
         distinct: true,
+        order: [["created_at", "DESC"]],
         // raw: true,
         include: [
           {
