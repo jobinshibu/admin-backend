@@ -102,6 +102,23 @@ class establishmentWorkingHoursController {
 
       for (const day of day_of_week) {
 
+        // 🔹 NEW CHECK: Same day already exists (and not deleted)
+        const alreadyExist = await establishmentWorkingHoursModal.findOne({
+          where: {
+            establishment_id: establishment_id,
+            day_of_week: day,
+            deleted_at: null,     // 🔹 important for soft delete
+          },
+        });
+
+        if (alreadyExist) {
+          return responseModel.failResponse(
+            1,
+            `Working hour for this day (${day}) already exists. Please update instead of adding.`,
+            {}
+          );
+        }
+
         let establishmentData = {
           establishment_id,
           day_of_week: day,
@@ -110,12 +127,13 @@ class establishmentWorkingHoursController {
           is_day_off: isDayOff,     // 🔹 ALWAYS '0' or '1'
         };
 
-        // 🔹 Check opposite entry exists
+        // 🔹 Check opposite entry exists (day off vs working)
         const isDayChangeEntryExist = await establishmentWorkingHoursModal.findOne({
           where: {
             day_of_week: day,
-            is_day_off: isDayOff === "1" ? "0" : "1",   // 🔹 STRING OPPOSITE
+            is_day_off: isDayOff === "1" ? "0" : "1",
             establishment_id,
+            deleted_at: null,
           },
         });
 
@@ -133,7 +151,8 @@ class establishmentWorkingHoursController {
             where: {
               day_of_week: day,
               establishment_id,
-              is_day_off: "0",   // 🔹 STRING
+              is_day_off: "0",
+              deleted_at: null,
               start_time: { [Op.lt]: end_time },
               end_time: { [Op.gt]: start_time },
             },
