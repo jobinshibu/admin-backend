@@ -11,34 +11,30 @@ class establishmentWorkingHoursController {
   // all category list
   async list(req) {
     try {
-      const { search_text, page_no, items_per_page, establishment_id } =
-        req.query;
+      const { page_no, items_per_page, establishment_id } = req.query;
       const offset = getOffset(+page_no, +items_per_page);
-      var whereClause = [{}];
-      if (search_text && search_text != "") {
-        whereClause = { day_of_week: { [Op.like]: "%" + search_text + "%" } };
+
+      if (!establishment_id) {
+        return responseModel.validationError(0, "establishment_id is required", {});
       }
 
-      const establishmentList =
-        await establishmentWorkingHoursModal.findAndCountAll({
-          offset: offset,
-          limit: +items_per_page,
-          // where: whereClause,
-          where: {
-            establishment_id: establishment_id,
-          },
-          order: [["day_of_week", "ASC"]],
-        });
+      const establishmentList = await establishmentWorkingHoursModal.findAndCountAll({
+        offset: offset,
+        limit: +items_per_page,
+        where: {
+          establishment_id: establishment_id,
+        },
 
-      if (establishmentList) {
-        return responseModel.successResponse(
-          1,
-          "Establishment Working Hour list Successfully",
-          establishmentList
-        );
-      } else {
-        return responseModel.successResponse(1, "Establishment Data Not Found");
-      }
+        // 🔹 Since day_of_week is integer (0–6), simple ASC works perfectly
+        order: [["day_of_week", "ASC"]],
+      });
+
+      return responseModel.successResponse(
+        1,
+        "Establishment Working Hour list Successfully",
+        establishmentList
+      );
+
     } catch (err) {
       const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
@@ -49,6 +45,8 @@ class establishmentWorkingHoursController {
       );
     }
   }
+
+
   async getEstablishmentHoursById(req) {
     try {
       const id = req.params.id;
@@ -78,6 +76,7 @@ class establishmentWorkingHoursController {
     }
   }
   //  department store data
+  // store multiple working hours at once
   async store(req) {
     try {
       const {
@@ -88,56 +87,78 @@ class establishmentWorkingHoursController {
         is_day_off,
       } = req.body;
 
-      let establishmentData = {
-        establishment_id: establishment_id,
-        day_of_week: day_of_week,
-        start_time: !is_day_off ? start_time : null,
-        end_time: !is_day_off ? end_time : null,
-        is_day_off: is_day_off,
-      };
+      // 🔹 Force string '0' or '1' (because DB is ENUM)
+      const isDayOff = is_day_off === "1" ? "1" : "0";
 
-      const isDayChangEntryExist = await establishmentWorkingHoursModal.findOne(
-        {
+      if (!establishment_id || !Array.isArray(day_of_week) || day_of_week.length === 0) {
+        return responseModel.validationError(
+          0,
+          "establishment_id and day_of_week array are required",
+          {}
+        );
+      }
+
+      const insertedRows = [];
+
+      for (const day of day_of_week) {
+
+        let establishmentData = {
+          establishment_id,
+          day_of_week: day,
+          start_time: isDayOff === "0" ? start_time : null,
+          end_time: isDayOff === "0" ? end_time : null,
+          is_day_off: isDayOff,     // 🔹 ALWAYS '0' or '1'
+        };
+
+        // 🔹 Check opposite entry exists
+        const isDayChangeEntryExist = await establishmentWorkingHoursModal.findOne({
           where: {
-            day_of_week: day_of_week,
-            is_day_off: !is_day_off,
-            establishment_id: establishment_id,
+            day_of_week: day,
+            is_day_off: isDayOff === "1" ? "0" : "1",   // 🔹 STRING OPPOSITE
+            establishment_id,
           },
+        });
+
+        if (isDayChangeEntryExist) {
+          return responseModel.failResponse(
+            1,
+            `Please delete already existing day change entry for day ${day}.`,
+            {}
+          );
         }
-      );
-      if (isDayChangEntryExist) {
-        return responseModel.failResponse(
-          1,
-          "Please delete already exist day change entries.",
-          {}
-        );
+
+        // 🔹 Time conflict check (only if working day)
+        if (isDayOff === "0") {
+          const conflict = await establishmentWorkingHoursModal.findOne({
+            where: {
+              day_of_week: day,
+              establishment_id,
+              is_day_off: "0",   // 🔹 STRING
+              start_time: { [Op.lt]: end_time },
+              end_time: { [Op.gt]: start_time },
+            },
+          });
+
+          if (conflict) {
+            return responseModel.failResponse(
+              1,
+              `There is a time conflict on day ${day}. Please check once.`,
+              {}
+            );
+          }
+        }
+
+        // 🔹 Insert row
+        const saved = await establishmentWorkingHoursModal.create(establishmentData);
+        insertedRows.push(saved);
       }
 
-      const conflict = await establishmentWorkingHoursModal.findOne({
-        where: {
-          start_time: { [Op.lt]: establishmentData.end_time },
-          end_time: { [Op.gt]: establishmentData.start_time },
-          is_day_off: is_day_off,
-          day_of_week: day_of_week,
-          establishment_id: establishment_id,
-        },
-      });
-      if (!conflict) {
-        const saveData = await establishmentWorkingHoursModal
-          .build(establishmentData)
-          .save();
-        return responseModel.successResponse(
-          1,
-          "Establishment Working Hour Created Successfully",
-          saveData
-        );
-      } else {
-        return responseModel.failResponse(
-          1,
-          "There is conflict between times please check once.",
-          {}
-        );
-      }
+      return responseModel.successResponse(
+        1,
+        "Establishment Working Hours Created Successfully",
+        insertedRows
+      );
+
     } catch (err) {
       const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(

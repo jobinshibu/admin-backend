@@ -258,7 +258,7 @@ const schemas = {
   // establishmentworkinghours
   establishmentworkinghours: Joi.object().keys({
     establishment_id: Joi.number().required(),
-    day_of_week: Joi.number().required(),
+    day_of_week: Joi.array().items(Joi.number()).required(),
     start_time: Joi.string().optional().allow(""),
     end_time: Joi.string().optional().allow(""),
     is_day_off: Joi.number().required(),

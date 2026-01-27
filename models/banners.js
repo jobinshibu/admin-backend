@@ -19,10 +19,10 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
       },
       page: {
-  type: DataTypes.STRING,
-  allowNull: false,
-  defaultValue: "home",
-},
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "home",
+      },
     },
     {
       updatedAt: "updated_at",
