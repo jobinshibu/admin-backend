@@ -102,22 +102,22 @@ class establishmentWorkingHoursController {
 
       for (const day of day_of_week) {
 
-        // 🔹 NEW CHECK: Same day already exists (and not deleted)
-        const alreadyExist = await establishmentWorkingHoursModal.findOne({
-          where: {
-            establishment_id: establishment_id,
-            day_of_week: day,
-            deleted_at: null,     // 🔹 important for soft delete
-          },
-        });
+        // // 🔹 NEW CHECK: Same day already exists (and not deleted)
+        // const alreadyExist = await establishmentWorkingHoursModal.findOne({
+        //   where: {
+        //     establishment_id: establishment_id,
+        //     day_of_week: day,
+        //     deleted_at: null,     // 🔹 important for soft delete
+        //   },
+        // });
 
-        if (alreadyExist) {
-          return responseModel.failResponse(
-            1,
-            `Working hour for this day (${day}) already exists. Please update instead of adding.`,
-            {}
-          );
-        }
+        // if (alreadyExist) {
+        //   return responseModel.failResponse(
+        //     1,
+        //     `Working hour for this day (${day}) already exists. Please update instead of adding.`,
+        //     {}
+        //   );
+        // }
 
         let establishmentData = {
           establishment_id,
