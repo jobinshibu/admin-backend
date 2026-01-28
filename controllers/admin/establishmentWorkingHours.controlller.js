@@ -1,14 +1,53 @@
 const db = require("../../models");
 const establishmentWorkingHoursModal = db.establishment_working_hours;
-let { Sequelize, Op } = require("sequelize");
+let { Op } = require("sequelize");
 const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
-// const { paginationService } = require("../../services");
+
+/* =====================================================
+   TIME HELPERS
+===================================================== */
+
+// 12-hour → 24-hour  (09:00AM → 09:00, 10:00PM → 22:00)
+function to24Hour(time12) {
+  if (!time12) return null;
+
+  // normalize (remove extra spaces)
+  time12 = time12.trim().toUpperCase();
+
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/);
+  if (!match) return time12; // already 24h
+
+  let [, hour, minute, meridian] = match;
+  hour = parseInt(hour, 10);
+
+  if (meridian === "PM" && hour !== 12) hour += 12;
+  if (meridian === "AM" && hour === 12) hour = 0;
+
+  return `${hour.toString().padStart(2, "0")}:${minute}`;
+}
+
+// 24-hour → 12-hour  (09:00 → 09:00 AM, 22:00 → 10:00 PM)
+function to12Hour(time24) {
+  if (!time24) return null;
+
+  const [hourStr, minute] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+
+  const meridian = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour.toString().padStart(2, "0")}:${minute} ${meridian}`;
+}
+
+/* =====================================================
+   CONTROLLER
+===================================================== */
 
 class establishmentWorkingHoursController {
   constructor() {}
 
-  // all category list
+  // LIST
   async list(req) {
     try {
       const { page_no, items_per_page, establishment_id } = req.query;
@@ -18,76 +57,72 @@ class establishmentWorkingHoursController {
         return responseModel.validationError(0, "establishment_id is required", {});
       }
 
-      const establishmentList = await establishmentWorkingHoursModal.findAndCountAll({
-        offset: offset,
+      const result = await establishmentWorkingHoursModal.findAndCountAll({
+        offset,
         limit: +items_per_page,
-        where: {
-          establishment_id: establishment_id,
-        },
-
-        // 🔹 Since day_of_week is integer (0–6), simple ASC works perfectly
+        where: { establishment_id },
         order: [["day_of_week", "ASC"]],
+      });
+
+      result.rows = result.rows.map(row => {
+        const data = row.toJSON();
+        return {
+          ...data,
+          start_time: to12Hour(data.start_time),
+          end_time: to12Hour(data.end_time),
+        };
       });
 
       return responseModel.successResponse(
         1,
         "Establishment Working Hour list Successfully",
-        establishmentList
+        result
       );
-
     } catch (err) {
-      const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
         0,
         "Something went wrong",
         {},
-        errMessage
+        err.message
       );
     }
   }
 
-
+  // GET BY ID
   async getEstablishmentHoursById(req) {
     try {
       const id = req.params.id;
-      const hoursData = await establishmentWorkingHoursModal.findOne({
-        where: { id: id },
-      });
-      if (hoursData) {
-        console.log("hoursData", hoursData.dataValues);
-        return responseModel.successResponse(
-          1,
-          "Establishment Hours data found.",
-          hoursData
-          // hoursData.dataValues
-        );
-      } else {
-        // console.log("hoursData", hoursData);
+
+      const row = await establishmentWorkingHoursModal.findOne({ where: { id } });
+
+      if (!row) {
         return responseModel.notFound(1, "Establishment Hours data not found.");
       }
+
+      const data = row.toJSON();
+      data.start_time = to12Hour(data.start_time);
+      data.end_time = to12Hour(data.end_time);
+
+      return responseModel.successResponse(
+        1,
+        "Establishment Hours data found.",
+        data
+      );
     } catch (err) {
-      const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
         0,
         "Something went wrong",
         {},
-        errMessage
+        err.message
       );
     }
   }
-  //  department store data
-  // store multiple working hours at once
+
+  // STORE (MULTI-DAY)
   async store(req) {
     try {
-      const {
-        establishment_id,
-        day_of_week,
-        start_time,
-        end_time,
-        is_day_off,
-      } = req.body;
+      const { establishment_id, day_of_week, start_time, end_time, is_day_off } = req.body;
 
-      // 🔹 Force string '0' or '1' (because DB is ENUM)
       const isDayOff = is_day_off === "1" ? "1" : "0";
 
       if (!establishment_id || !Array.isArray(day_of_week) || day_of_week.length === 0) {
@@ -101,73 +136,14 @@ class establishmentWorkingHoursController {
       const insertedRows = [];
 
       for (const day of day_of_week) {
-
-        // // 🔹 NEW CHECK: Same day already exists (and not deleted)
-        // const alreadyExist = await establishmentWorkingHoursModal.findOne({
-        //   where: {
-        //     establishment_id: establishment_id,
-        //     day_of_week: day,
-        //     deleted_at: null,     // 🔹 important for soft delete
-        //   },
-        // });
-
-        // if (alreadyExist) {
-        //   return responseModel.failResponse(
-        //     1,
-        //     `Working hour for this day (${day}) already exists. Please update instead of adding.`,
-        //     {}
-        //   );
-        // }
-
-        let establishmentData = {
+        const establishmentData = {
           establishment_id,
           day_of_week: day,
-          start_time: isDayOff === "0" ? start_time : null,
-          end_time: isDayOff === "0" ? end_time : null,
-          is_day_off: isDayOff,     // 🔹 ALWAYS '0' or '1'
+          start_time: isDayOff === "0" ? to24Hour(start_time) : null,
+          end_time: isDayOff === "0" ? to24Hour(end_time) : null,
+          is_day_off: isDayOff,
         };
 
-        // 🔹 Check opposite entry exists (day off vs working)
-        const isDayChangeEntryExist = await establishmentWorkingHoursModal.findOne({
-          where: {
-            day_of_week: day,
-            is_day_off: isDayOff === "1" ? "0" : "1",
-            establishment_id,
-            deleted_at: null,
-          },
-        });
-
-        if (isDayChangeEntryExist) {
-          return responseModel.failResponse(
-            1,
-            `Please delete already existing day change entry for day ${day}.`,
-            {}
-          );
-        }
-
-        // 🔹 Time conflict check (only if working day)
-        if (isDayOff === "0") {
-          const conflict = await establishmentWorkingHoursModal.findOne({
-            where: {
-              day_of_week: day,
-              establishment_id,
-              is_day_off: "0",
-              deleted_at: null,
-              start_time: { [Op.lt]: end_time },
-              end_time: { [Op.gt]: start_time },
-            },
-          });
-
-          if (conflict) {
-            return responseModel.failResponse(
-              1,
-              `There is a time conflict on day ${day}. Please check once.`,
-              {}
-            );
-          }
-        }
-
-        // 🔹 Insert row
         const saved = await establishmentWorkingHoursModal.create(establishmentData);
         insertedRows.push(saved);
       }
@@ -177,113 +153,73 @@ class establishmentWorkingHoursController {
         "Establishment Working Hours Created Successfully",
         insertedRows
       );
-
     } catch (err) {
-      const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
         0,
         "Create Establishment Hours Error",
         {},
-        errMessage
+        err.message
       );
     }
   }
 
-  // update department detail
+  // UPDATE
   async update(req) {
     try {
       const id = req.params.id;
-      const {
+      const { establishment_id, day_of_week, start_time, end_time, is_day_off } = req.body;
+
+      const isDayOff = is_day_off === "1" ? "1" : "0";
+
+      const updateData = {
         establishment_id,
         day_of_week,
-        start_time,
-        end_time,
-        is_day_off,
-      } = req.body;
-
-      let establishmentData = {
-        establishment_id: establishment_id,
-        day_of_week: day_of_week,
-        start_time: !is_day_off ? start_time : null,
-        end_time: !is_day_off ? end_time : null,
-        is_day_off: is_day_off,
+        start_time: isDayOff === "0" ? to24Hour(start_time) : null,
+        end_time: isDayOff === "0" ? to24Hour(end_time) : null,
+        is_day_off: isDayOff,
       };
 
-      const isDayChangEntryExist = await establishmentWorkingHoursModal.findOne(
-        {
-          where: {
-            day_of_week: day_of_week,
-            is_day_off: !is_day_off,
-            establishment_id: establishment_id,
-          },
-        }
+      await establishmentWorkingHoursModal.update(updateData, { where: { id } });
+
+      return responseModel.successResponse(
+        1,
+        "Establishment Working Hour Updated Successfully",
+        {}
       );
-      if (isDayChangEntryExist) {
-        return responseModel.failResponse(
-          1,
-          "Please delete already exist day change entries.",
-          {}
-        );
-      }
-
-      const conflict = await establishmentWorkingHoursModal.findOne({
-        where: {
-          start_time: { [Op.lt]: establishmentData.end_time },
-          end_time: { [Op.gt]: establishmentData.start_time },
-          is_day_off: is_day_off,
-          day_of_week: day_of_week,
-          establishment_id: establishment_id,
-          id: { [Op.ne]: id },
-        },
-      });
-      if (!conflict) {
-        await establishmentWorkingHoursModal.update(establishmentData, {
-          where: { id: id },
-        });
-
-        return responseModel.successResponse(
-          1,
-          "Establishment Working Hour Updated Successfully",
-          {}
-        );
-      } else {
-        return responseModel.failResponse(
-          1,
-          "There is conflict between times please check once.",
-          {}
-        );
-      }
     } catch (err) {
-      const errMessage = typeof err == "string" ? err : err.message;
       return responseModel.failResponse(
         0,
         "Establishment Working Hour Error",
         {},
-        errMessage
+        err.message
       );
     }
   }
 
-  // delete Department
+  // DELETE
   async destroy(req) {
-    const id = req.params.id;
+    try {
+      const id = req.params.id;
 
-    const getEstablishmentDetails =
-      await establishmentWorkingHoursModal.findOne({
-        where: { id: id },
-      });
-    if (getEstablishmentDetails != null) {
-      const Delete = establishmentWorkingHoursModal.destroy({
-        where: { id: id },
-      });
+      const row = await establishmentWorkingHoursModal.findOne({ where: { id } });
+      if (!row) {
+        return responseModel.validationError(0, "Record not exist", {});
+      }
+
+      await establishmentWorkingHoursModal.destroy({ where: { id } });
 
       return responseModel.successResponse(
         1,
         "Establishment Working Hour Deleted Successfully",
         {}
       );
-    } else {
-      return responseModel.validationError(0, "Record not exist", {});
+    } catch (err) {
+      return responseModel.failResponse(
+        0,
+        "Delete Error",
+        {},
+        err.message
+      );
     }
   }
 }
