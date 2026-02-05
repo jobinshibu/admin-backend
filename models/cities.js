@@ -31,5 +31,28 @@ module.exports = function (sequelize, DataTypes) {
       as: "zoneInfo",
     });
   };
+  Cities.afterUpdate(async (city, options) => {
+    if (city.changed('name')) {
+      try {
+        const Establishment = sequelize.models.establishments;
+        if (Establishment) {
+          const linkedEstablishments = await Establishment.findAll({
+            where: { city_id: city.id },
+            attributes: ['id'],
+            transaction: options.transaction
+          });
+          for (const est of linkedEstablishments) {
+            await Establishment.update(
+              { updated_at: new Date() },
+              { where: { id: est.id }, transaction: options.transaction, individualHooks: true }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Cities afterUpdate search sync trigger failed:', err.message);
+      }
+    }
+  });
+
   return Cities;
 };

@@ -6,7 +6,7 @@ const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 
 class PackagesController {
-  constructor() {}
+  constructor() { }
 
   async list(req) {
     try {
@@ -157,101 +157,101 @@ class PackagesController {
 
   async store(req) {
     try {
-        const { 
-        name, sub_title, description, strike_price, discount_text, 
+      const {
+        name, sub_title, description, strike_price, discount_text,
         addon_price, service_duration_minutes, type,
-        sla, sla_unit, demographics, visible, base_price, selling_price, category_id, result_time, 
+        sla, sla_unit, demographics, visible, base_price, selling_price, category_id, result_time,
         recommended, establishment_id, tag, instruction_before_test
-        } = req.body;
+      } = req.body;
 
-        // ✅ FIXED: SINGLE IMAGE UPLOAD
-        const image = req.file ? req.file.filename : null;
+      // ✅ FIXED: SINGLE IMAGE UPLOAD
+      const image = req.file ? req.file.filename : null;
 
-        console.log('=== PACKAGE DATA ===');
-        console.log('demographics raw:', demographics);
-        console.log('image:', image);
+      console.log('=== PACKAGE DATA ===');
+      console.log('demographics raw:', demographics);
+      console.log('image:', image);
 
-        // ✅ FIXED: HANDLE DEMOGRAPHICS - STRING TO ARRAY
-        let demographicsArray = null;
-        if (demographics) {
+      // ✅ FIXED: HANDLE DEMOGRAPHICS - STRING TO ARRAY
+      let demographicsArray = null;
+      if (demographics) {
         if (Array.isArray(demographics)) {
-            demographicsArray = demographics;
+          demographicsArray = demographics;
         } else if (typeof demographics === 'string') {
-            // Convert "male,seniors" → ["male", "seniors"]
-            demographicsArray = demographics.split(',').map(item => item.trim().toLowerCase());
+          // Convert "male,seniors" → ["male", "seniors"]
+          demographicsArray = demographics.split(',').map(item => item.trim().toLowerCase());
         }
-        }
+      }
 
-        console.log('demographics fixed:', demographicsArray);
+      console.log('demographics fixed:', demographicsArray);
 
-        const getPackageCheck = await PackagesModel.findOne({
+      const getPackageCheck = await PackagesModel.findOne({
         where: { name: name },
         attributes: ["id", "name"],
-        });
+      });
 
-        if (getPackageCheck == null) {
+      if (getPackageCheck == null) {
         // Generate ID
         const lastPackage = await PackagesModel.findOne({
-            order: [['id', 'DESC']],
+          order: [['id', 'DESC']],
         });
         let nextNumber = 1000000;
         if (lastPackage) {
-            nextNumber = parseInt(lastPackage.id) + 1;
+          nextNumber = parseInt(lastPackage.id) + 1;
         }
         const newId = nextNumber.toString();
 
         let packageData = {
-            id: newId,
-            name,
-            sub_title,
-            description,
-            tag,
-            image,
-            base_price: parseFloat(base_price) || 0,
-            selling_price: parseFloat(selling_price) || 0,
-            strike_price: strike_price ? parseFloat(strike_price) : null,
-            discount_text,
-            addon_price: addon_price ? parseFloat(addon_price) : null,
-            service_duration_minutes,
-            sla: sla ? parseInt(sla) : null,
-            sla_unit,
-            demographics: demographicsArray, // ✅ FIXED
-            visible: visible === 'true' || visible === true,
-            establishment_id: establishment_id || null,
-            category_id,
-            type,
-            result_time,
-            recommended: recommended === 'true' || recommended === true,
-            instruction_before_test: Array.isArray(instruction_before_test) ? instruction_before_test : (instruction_before_test ? JSON.parse(instruction_before_test) : null),
+          id: newId,
+          name,
+          sub_title,
+          description,
+          tag,
+          image,
+          base_price: parseFloat(base_price) || 0,
+          selling_price: parseFloat(selling_price) || 0,
+          strike_price: strike_price ? parseFloat(strike_price) : null,
+          discount_text,
+          addon_price: addon_price ? parseFloat(addon_price) : null,
+          service_duration_minutes,
+          sla: sla ? parseInt(sla) : null,
+          sla_unit,
+          demographics: demographicsArray, // ✅ FIXED
+          visible: visible === 'true' || visible === true,
+          establishment_id: establishment_id || null,
+          category_id,
+          type,
+          result_time,
+          recommended: recommended === 'true' || recommended === true,
+          instruction_before_test: Array.isArray(instruction_before_test) ? instruction_before_test : (instruction_before_test ? JSON.parse(instruction_before_test) : null),
         };
 
         const savePackageData = await PackagesModel.create(packageData);
-        
+
         console.log('✅ PACKAGE CREATED:', savePackageData.id);
-        
+
         return responseModel.successResponse(
-            1,
-            "Package Created Successfully",
-            savePackageData
+          1,
+          "Package Created Successfully",
+          savePackageData
         );
-        } else {
+      } else {
         return responseModel.validationError(
-            0,
-            "Package name already exists",
-            {}
+          0,
+          "Package name already exists",
+          {}
         );
-        }
+      }
     } catch (err) {
-        console.log('=== STORE ERROR ===', err);
-        const errMessage = typeof err == "string" ? err : err.message;
-        return responseModel.failResponse(
+      console.log('=== STORE ERROR ===', err);
+      const errMessage = typeof err == "string" ? err : err.message;
+      return responseModel.failResponse(
         0,
         "Something went wrong.",
         {},
         errMessage
-        );
+      );
     }
-    }
+  }
 
   async update(req) {
     let t;
@@ -259,10 +259,10 @@ class PackagesController {
       t = await db.sequelize.transaction();
       const id = req.params.id;
 
-      const { 
-        name, sub_title, description, strike_price, discount_text, 
+      const {
+        name, sub_title, description, strike_price, discount_text,
         addon_price, service_duration_minutes, type,
-        sla, sla_unit, demographics, visible, base_price, selling_price, category_id, result_time, 
+        sla, sla_unit, demographics, visible, base_price, selling_price, category_id, result_time,
         recommended, establishment_id, tag, instruction_before_test
       } = req.body;
 
@@ -307,8 +307,8 @@ class PackagesController {
         type: type || null,
         result_time: result_time || null,
         recommended: recommended === 'true' || recommended === true,
-        instruction_before_test: Array.isArray(instruction_before_test) 
-          ? instruction_before_test 
+        instruction_before_test: Array.isArray(instruction_before_test)
+          ? instruction_before_test
           : (instruction_before_test ? JSON.parse(instruction_before_test) : null),
       };
 
@@ -330,35 +330,13 @@ class PackagesController {
 
       await PackagesModel.update(packageData, { where: { id }, transaction: t });
 
-      // SEARCH SYNC — RECREATE ENTRY
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          const subTitle = packageData.sub_title || '';
-          const keywords = `${name} ${subTitle} health package test checkup lab diagnostic`.toLowerCase().trim();
-
-          await SearchModel.destroy({
-            where: { reference_id: id, type: 'package' },
-            transaction: t
-          });
-
-          await SearchModel.create({
-            name: name.trim(),
-            keyword: keywords.slice(0, 255),
-            type: 'package',
-            reference_id: id,
-            search_count: 0
-          }, { transaction: t });
-        }
-      } catch (searchErr) {
-        console.warn("Package search sync failed on update:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       await t.commit();
       return responseModel.successResponse(1, "Package Updated Successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       console.error("Package update error:", err);
       return responseModel.failResponse(0, "Something went wrong.", {}, err.message);
     }
@@ -380,18 +358,7 @@ class PackagesController {
         return responseModel.validationError(0, "Package not found", {});
       }
 
-      // REMOVE FROM SEARCH TABLE FIRST
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          await SearchModel.destroy({
-            where: { reference_id: id, type: 'package' },
-            transaction: t
-          });
-        }
-      } catch (searchErr) {
-        console.error("Package search cleanup failed:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       // Delete add-ons
       await db.package_addons.destroy({ where: { package_id: id }, transaction: t });
@@ -413,7 +380,7 @@ class PackagesController {
       return responseModel.successResponse(1, "Package and all related data deleted successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       console.error('destroy package error:', err);
       return responseModel.failResponse(0, "Error deleting package", {}, err.message);
     }
@@ -712,7 +679,7 @@ class PackagesController {
             why_recommended: a.why_recommended
           };
         });
-      
+
       const addonGroups = addons
         .filter(a => a.group_id)
         .map(a => {
@@ -725,7 +692,7 @@ class PackagesController {
             recommended: a.recommended,
             why_recommended: a.why_recommended
           };
-      });
+        });
 
       return responseModel.successResponse(1, "Add-ons fetched", {
         addonBiomarkers,

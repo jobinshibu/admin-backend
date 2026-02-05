@@ -526,6 +526,8 @@ class EstablishmentController {
         where: { id: insertData.id },
       });
 
+      // await this._syncWithSearch(insertData.id); // Removed: handled by model hooks
+
       return responseModel.successResponse(
         1,
         "Establishment  Created Successfully",
@@ -1132,47 +1134,8 @@ class EstablishmentController {
           await EstablishmentServicesModal.bulkCreate(serviceData, { transaction: t });
         }
 
-        // === SEARCH SYNC — SIMPLE & PERFECT ===
-        try {
-          const SearchModel = db.Search || db.search;
-          if (!SearchModel) throw new Error("Search model not found");
-
-          const newStatus = toBoolean(active_status);
-          const typeRecord = establishment_type
-            ? await EstablishmentTypeModal.findByPk(establishment_type, { attributes: ['name'] })
-            : null;
-
-          const typeName = typeRecord?.name?.trim();
-          const allowedTypes = ['Hospital', 'Clinic', 'Pharmacy'];
-          const isSearchable = allowedTypes.includes(typeName);
-          const searchType = typeName?.toLowerCase();
-
-          // STEP 1: Always delete old entries for this establishment (prevents duplicates)
-          await SearchModel.destroy({
-            where: {
-              reference_id: id,
-              type: { [Op.in]: ['hospital', 'clinic', 'pharmacy'] }
-            },
-            transaction: t
-          });
-
-          // STEP 2: Only recreate if it's searchable AND active
-          if (isSearchable && newStatus && name) {
-            const keyword = `${name} ${address || ''} ${expertin || ''}`.toLowerCase().trim();
-
-            await SearchModel.create({
-              name: name.trim(),
-              keyword: keyword.slice(0, 255),
-              type: searchType,
-              reference_id: id,
-              search_count: 0
-            }, { transaction: t });
-          }
-
-        } catch (searchError) {
-          console.error('Search sync failed:', searchError);
-          // Don't break the whole update
-        }
+        // === NEW SEARCH SYNC ===
+        // await this._syncWithSearch(id, t); // Removed: handled by model hooks
 
         await t.commit();
         return responseModel.successResponse(1, "Establishment Updated Successfully", {});
@@ -1279,97 +1242,8 @@ class EstablishmentController {
         );
       }
 
-      const SearchModel = db.Search || db.search;
-
-      // Declare outside so usable in final response
-      const allowedTypes = ["Hospital", "Clinic", "Pharmacy"];
-      let typeName = establishment.establishmentTypeInfo?.name || "";
-      let isSearchable = allowedTypes.includes(typeName);
-      let searchType = typeName ? typeName.toLowerCase() : "";
-
-      if (SearchModel) {
-        // Remove old establishment entry
-        await SearchModel.destroy({
-          where: {
-            reference_id: id,
-            type: { [Op.in]: ["hospital", "clinic", "pharmacy"] }
-          },
-          transaction: t
-        });
-
-        // Add new if active
-        if (normalizedStatus === 1 && isSearchable && establishment.name) {
-          const keyword = `${establishment.name} ${establishment.address || ""} ${establishment.expertin || ""
-            }`
-            .trim()
-            .toLowerCase();
-
-          await SearchModel.create(
-            {
-              name: establishment.name.trim(),
-              keyword: keyword.slice(0, 255),
-              type: searchType,
-              reference_id: id,
-              search_count: 0
-            },
-            { transaction: t }
-          );
-        }
-
-        // Doctors search sync
-        if (professionIds.length > 0) {
-          if (normalizedStatus === 0) {
-            // Remove doctors from search
-            await SearchModel.destroy({
-              where: {
-                reference_id: { [Op.in]: professionIds },
-                type: "doctor"
-              },
-              transaction: t
-            });
-          } else {
-            // Add / Update doctors
-            const doctors = await ProfessionsModal.findAll({
-              where: { id: { [Op.in]: professionIds } },
-              attributes: [
-                "id",
-                "first_name",
-                "last_name",
-                "surnametype",
-                "designation",
-                "expert_in"
-              ],
-              transaction: t,
-              raw: true
-            });
-
-            const entries = doctors.map((doc) => {
-              const name = `${doc.surnametype || ""} ${doc.first_name || ""} ${doc.last_name || ""
-                }`.trim();
-
-              const keyword = `${name} ${doc.expert_in || ""} ${doc.designation || ""
-                }`
-                .toLowerCase()
-                .trim();
-
-              return {
-                name,
-                keyword: keyword.slice(0, 255),
-                type: "doctor",
-                reference_id: doc.id,
-                search_count: 0
-              };
-            });
-
-            if (entries.length > 0) {
-              await SearchModel.bulkCreate(entries, {
-                updateOnDuplicate: ["keyword", "search_count"],
-                transaction: t
-              });
-            }
-          }
-        }
-      }
+      // === NEW SEARCH SYNC ===
+      // await this._syncWithSearch(id, t); // Removed: handled by model hooks
 
       // SUCCESS: Commit karo aur return
       await t.commit();
@@ -1483,20 +1357,8 @@ class EstablishmentController {
         if (establishmentToDelete) {
           await establishmentToDelete.destroy();
 
-          // Clean up search table — only for hospital/clinic/pharmacy
-          try {
-            const SearchModel = db.Search || db.search;
-            if (SearchModel) {
-              await SearchModel.destroy({
-                where: {
-                  reference_id: id,
-                  type: { [Op.in]: ['hospital', 'clinic', 'pharmacy'] }
-                }
-              });
-            }
-          } catch (searchError) {
-            console.error('Error cleaning search on destroy:', searchError);
-          }
+          // Clean up search table
+          // try { ... } // Removed: handled by model hooks
         }
         await imageUploadService.unlinkImage(
           "establishment",
@@ -1531,7 +1393,71 @@ class EstablishmentController {
       );
     }
   }
+
+  /*
+  async _syncWithSearch(establishmentId, transaction = null) {
+    try {
+      const SearchModel = db.Search || db.search;
+      if (!SearchModel) return;
+
+      const establishment = await EstablishmentModal.findByPk(establishmentId, {
+        attributes: ["id", "name", "active_status"],
+        include: [
+          { model: ZoneModal, as: 'zoneInfo', attributes: ['name'] },
+          { model: CityModal, as: 'cityInfo', attributes: ['name'] },
+          {
+            model: EstablishmentSpecialitiesModal,
+            as: 'specialitiesList',
+            include: [{ model: SpecialitiesModal, as: 'name', attributes: ['name'] }]
+          },
+          {
+            model: EstablishmentBrandsModal,
+            as: 'brandsList',
+            include: [{ model: brandsModal, as: 'brandInfo', attributes: ['name'] }]
+          },
+          {
+            model: EstablishmentTypeModal,
+            as: 'establishmentTypeInfo',
+            attributes: ['name']
+          }
+        ],
+        transaction
+      });
+
+      if (!establishment) return;
+
+      // STEP 1: Always delete old entries
+      await SearchModel.destroy({
+        where: { reference_id: establishmentId, type: { [Op.ne]: 'doctor' } }, // Keep doctors for now if needed, but the requirement said search result is ALWAYS establishment. Wait, requirements said "search result is always establishment, no other thing is not required". This means I should probably remove everything else.
+        transaction
+      });
+
+      // If inactive, don't recreate
+      if (!establishment.active_status) return;
+
+      // STEP 2: Construct keywords
+      const zoneName = establishment.zoneInfo?.name || "";
+      const cityName = establishment.cityInfo?.name || "";
+      const specialityNames = establishment.specialitiesList?.map(s => s.name?.name).filter(Boolean).join(" ") || "";
+      const brandNames = establishment.brandsList?.map(b => b.brandInfo?.name).filter(Boolean).join(" ") || "";
+      const typeName = establishment.establishmentTypeInfo?.name || "Others";
+
+      const keywords = `${establishment.name} ${zoneName} ${cityName} ${specialityNames} ${brandNames} ${typeName}`.toLowerCase().trim();
+
+      // STEP 3: Create search entry
+      await SearchModel.create({
+        name: establishment.name.trim(),
+        keyword: keywords.slice(0, 255),
+        type: typeName.toLowerCase(),
+        reference_id: establishmentId,
+        search_count: 0
+      }, { transaction });
+
+    } catch (error) {
+      console.error(`Search sync failed for establishment ${establishmentId}:`, error);
+    }
+  }
+  */
 }
 
 module.exports = { EstablishmentController };
-

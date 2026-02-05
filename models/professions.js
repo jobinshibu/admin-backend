@@ -162,32 +162,6 @@ module.exports = function (sequelize, DataTypes) {
       as: "working_hours",
     });
 
-    
-    // === SEARCH SYNC HOOKS FOR DOCTORS ===
-
-    Professions.afterCreate(async (profession, options) => {
-      try {
-        const SearchModel = models.Search || models.search;
-        if (!SearchModel) return;
-
-        // Only add to search if active
-        if (!toBoolean(profession.active_status)) return;
-
-        const fullName = `${profession.surnametype || ''} ${profession.first_name || ''} ${profession.last_name || ''}`.trim();
-        const keyword = `${fullName} ${profession.expert_in || ''} ${profession.designation || ''}`.toLowerCase().trim();
-
-        await SearchModel.create({
-          name: fullName || 'Doctor',
-          keyword: keyword.slice(0, 255),
-          type: 'doctor',
-          reference_id: profession.id,
-          search_count: 0
-        }, { transaction: options.transaction });
-
-      } catch (err) {
-        console.error('Profession afterCreate search sync failed:', err.message);
-      }
-    });
   };
 
   Professions.prototype.toJSON = function () {

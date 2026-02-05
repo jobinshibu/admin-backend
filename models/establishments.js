@@ -191,56 +191,104 @@ module.exports = function (sequelize, DataTypes) {
     });
 
 
-    const SEARCHABLE_TYPES = ['Hospital', 'Clinic', 'Pharmacy'];
-
-    // Helper to determine if type is searchable and get correct lowercase type
-    const getSearchType = async (establishment, transaction) => {
-      if (!establishment.establishment_type) return null;
-
-      const typeRecord = await models.establishment_types.findByPk(
-        establishment.establishment_type,
-        {
-          attributes: ['name'],
-          transaction
-        }
-      );
-
-      if (!typeRecord) return null;
-
-      const typeName = typeRecord.name.trim();
-      if (SEARCHABLE_TYPES.includes(typeName)) {
-        return typeName.toLowerCase(); // 'hospital', 'clinic', 'pharmacy'
-      }
-      return null; // Laboratory, Others, etc. → not searchable
-    };
-
-    // === AFTER CREATE ===
-    Establishment.afterCreate(async (establishment, options) => {
+    // === CENTRALIZED SEARCH SYNC HELPER ===
+    const syncWithSearch = async (establishmentId, transaction = null) => {
       try {
         const searchModel = models.Search || models.search;
         if (!searchModel) return;
 
-        const transaction = options.transaction;
+        const establishment = await Establishment.findByPk(establishmentId, {
+          attributes: ["id", "name", "active_status"],
+          include: [
+            { model: models.zones, as: 'zoneInfo', attributes: ['name'] },
+            { model: models.cities, as: 'cityInfo', attributes: ['name'] },
+            {
+              model: models.establishment_specialities,
+              as: 'specialitiesList',
+              include: [{ model: models.specialities, as: 'name', attributes: ['name'] }]
+            },
+            {
+              model: models.establishment_brands,
+              as: 'brandsList',
+              include: [{ model: models.brands, as: 'brandInfo', attributes: ['name'] }]
+            },
+            {
+              model: models.establishment_types,
+              as: 'establishmentTypeInfo',
+              attributes: ['name']
+            }
+          ],
+          transaction
+        });
 
-        const searchType = await getSearchType(establishment, transaction);
-        if (!searchType || establishment.active_status !== true && establishment.active_status !== 1) {
-          return; // Don't add inactive or non-searchable types
-        }
+        if (!establishment) return;
 
-        const name = (establishment.name || '').trim();
-        const keyword = `${name} ${establishment.address || ''} ${establishment.expertin || ''}`
-          .toLowerCase().trim();
+        // STEP 1: Always delete old entries
+        await searchModel.destroy({
+          where: { reference_id: establishmentId, type: { [Op.ne]: 'doctor' } },
+          transaction
+        });
 
+        // If inactive, don't recreate
+        if (!establishment.active_status) return;
+
+        // STEP 2: Construct keywords
+        const zoneName = establishment.zoneInfo?.name || "";
+        const cityName = establishment.cityInfo?.name || "";
+        const specialityNames = establishment.specialitiesList?.map(s => s.name?.name).filter(Boolean).join(" ") || "";
+        const brandNames = establishment.brandsList?.map(b => b.brandInfo?.name).filter(Boolean).join(" ") || "";
+        const typeName = establishment.establishmentTypeInfo?.name || "Others";
+
+        const keywords = `${establishment.name} ${zoneName} ${cityName} ${specialityNames} ${brandNames} ${typeName}`.toLowerCase().trim();
+
+        // STEP 3: Create search entry
         await searchModel.create({
-          name,
-          keyword: keyword.slice(0, 255),
-          type: searchType,
-          reference_id: establishment.id,
+          name: establishment.name.trim(),
+          keyword: keywords.slice(0, 255),
+          type: typeName.toLowerCase(),
+          reference_id: establishmentId,
           search_count: 0
         }, { transaction });
 
       } catch (error) {
-        console.error('Establishment afterCreate search sync failed:', error);
+        console.error(`Model-level search sync failed for establishment ${establishmentId}:`, error);
+      }
+    };
+
+    // === HOOKS ===
+    Establishment.afterCreate(async (establishment, options) => {
+      await syncWithSearch(establishment.id, options.transaction);
+    });
+
+    Establishment.afterUpdate(async (establishment, options) => {
+      await syncWithSearch(establishment.id, options.transaction);
+    });
+
+    Establishment.afterDestroy(async (establishment, options) => {
+      try {
+        const searchModel = models.Search || models.search;
+        if (searchModel) {
+          await searchModel.destroy({
+            where: { reference_id: establishment.id },
+            transaction: options.transaction
+          });
+        }
+      } catch (error) {
+        console.error('Establishment afterDestroy search cleanup failed:', error);
+      }
+    });
+
+    Establishment.afterBulkUpdate(async (options) => {
+      try {
+        const { where } = options;
+        if (!where || !where.id) return;
+
+        let ids = Array.isArray(where.id) ? where.id : [where.id];
+        for (const id of ids) {
+          await syncWithSearch(id, options.transaction);
+        }
+      } catch (error) {
+        console.error('Establishment afterBulkUpdate search sync failed:', error);
       }
     });
   };

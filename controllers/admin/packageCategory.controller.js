@@ -6,7 +6,7 @@ const { responseModel } = require("../../responses");
 const { getOffset } = require("../../utils/helper");
 const PackageCategoryModal = db.package_categories;
 class PackageCategoryController {
-  constructor() {}
+  constructor() { }
 
   // all Specialities list
   async list(req) {
@@ -71,15 +71,15 @@ class PackageCategoryController {
 
       return categories.length
         ? responseModel.successResponse(
-            1,
-            "Package categories fetched successfully",
-            categories
-          )
+          1,
+          "Package categories fetched successfully",
+          categories
+        )
         : responseModel.successResponse(
-            1,
-            "No package categories found",
-            []
-          );
+          1,
+          "No package categories found",
+          []
+        );
     } catch (err) {
       const errMessage = typeof err === "string" ? err : err.message;
       return responseModel.failResponse(
@@ -104,10 +104,10 @@ class PackageCategoryController {
 
       return category
         ? responseModel.successResponse(
-            1,
-            "Package category fetched successfully",
-            category
-          )
+          1,
+          "Package category fetched successfully",
+          category
+        )
         : responseModel.successResponse(1, "Package category not found");
     } catch (err) {
       const errMessage = typeof err === "string" ? err : err.message;
@@ -214,34 +214,13 @@ class PackageCategoryController {
 
       await PackageCategoryModal.update(updateData, { where: { id }, transaction: t });
 
-      // SEARCH SYNC: Update or recreate
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          const keyword = `${name} package health checkup plan offer`.toLowerCase().trim();
-
-          await SearchModel.destroy({
-            where: { reference_id: id, type: 'Package Category' },
-            transaction: t
-          });
-
-          await SearchModel.create({
-            name: name.trim(),
-            keyword: keyword.slice(0, 255),
-            type: 'Package Category',
-            reference_id: id,
-            search_count: 0
-          }, { transaction: t });
-        }
-      } catch (searchErr) {
-        console.warn("PackageCategory search sync failed on update:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       await t.commit();
       return responseModel.successResponse(1, "Package category updated successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       console.error("PackageCategory update error:", err);
       return responseModel.failResponse(0, "Something went wrong", {}, err.message);
     }
@@ -266,18 +245,7 @@ class PackageCategoryController {
         return responseModel.validationError(0, "Package category not found", {});
       }
 
-      // Remove from search table first
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          await SearchModel.destroy({
-            where: { reference_id: id, type: 'Package Category' },
-            transaction: t
-          });
-        }
-      } catch (searchErr) {
-        console.error("PackageCategory search cleanup failed:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       // Delete icon file
       if (category.icon) {
@@ -292,7 +260,7 @@ class PackageCategoryController {
       return responseModel.successResponse(1, "Package category deleted successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       console.error("PackageCategory delete error:", err);
       return responseModel.failResponse(0, "Something went wrong", {}, err.message);
     }

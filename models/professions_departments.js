@@ -45,6 +45,26 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: "department_id",
       as: "departmentInfo",
     });
+
+    // === SEARCH SYNC HOOKS ===
+    const triggerEstablishmentSync = async (instance, options) => {
+      try {
+        const Establishment = models.establishments;
+        if (Establishment && instance.establishment_id) {
+          // Trigger afterUpdate on establishment to force search sync
+          await Establishment.update(
+            { updated_at: new Date() },
+            { where: { id: instance.establishment_id }, transaction: options.transaction, individualHooks: true }
+          );
+        }
+      } catch (err) {
+        console.error('ProfessionsDepartment search sync trigger failed:', err.message);
+      }
+    };
+
+    ProfessionsDepartment.afterCreate(triggerEstablishmentSync);
+    ProfessionsDepartment.afterUpdate(triggerEstablishmentSync);
+    ProfessionsDepartment.afterDestroy(triggerEstablishmentSync);
   };
   return ProfessionsDepartment;
 };

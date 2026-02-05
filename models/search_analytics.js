@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
         unique: true,
       },
       search_type: {
-        type: DataTypes.ENUM("doctor", "hospital", "service", "speciality", "general"),
+        type: DataTypes.ENUM("garage", "showroom", "service_center", "wash_station", "tyre_shop", "general"),
         defaultValue: "general",
       },
       search_count: {

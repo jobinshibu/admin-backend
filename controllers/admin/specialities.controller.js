@@ -7,7 +7,7 @@ const { getOffset } = require("../../utils/helper");
 const ProfessionsSpecialitiesModal = db.professions_specialities;
 const DeptSpecialitiesModel = db.department_specialties;
 class SpecialitiesController {
-  constructor() {}
+  constructor() { }
 
   // all Specialities list
   async list(req) {
@@ -199,41 +199,13 @@ class SpecialitiesController {
         transaction: t
       });
 
-      // SEARCH SYNC — UPDATE
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          const spec = await SpecialitiesModal.findByPk(id, {
-            attributes: ['name'],
-            transaction: t
-          });
-
-          if (spec) {
-            const keyword = `${spec.name} specialist doctor treatment`.toLowerCase();
-
-            await SearchModel.destroy({
-              where: { reference_id: id, type: 'speciality' },
-              transaction: t
-            });
-
-            await SearchModel.create({
-              name: spec.name.trim(),
-              keyword: keyword.slice(0, 255),
-              type: 'speciality',
-              reference_id: id,
-              search_count: 0
-            }, { transaction: t });
-          }
-        }
-      } catch (searchErr) {
-        console.warn("Speciality search sync failed on update:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       await t.commit();
       return responseModel.successResponse(1, "Specialities Updated Successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       const errMessage = typeof err === "string" ? err : err.message;
       return responseModel.failResponse(0, "Something went wrong.", {}, errMessage);
     }
@@ -274,18 +246,7 @@ class SpecialitiesController {
         return responseModel.validationError(0, "Specialities not Exist", {});
       }
 
-      // Remove from search table
-      try {
-        const SearchModel = db.Search || db.search;
-        if (SearchModel) {
-          await SearchModel.destroy({
-            where: { reference_id: id, type: 'speciality' },
-            transaction: t
-          });
-        }
-      } catch (searchErr) {
-        console.error("Speciality search cleanup failed:", searchErr.message);
-      }
+      // SEARCH SYNC logic removed according to new establishment-only logic.
 
       // Delete file + DB record
       if (speciality.icon && fs.existsSync("./uploads/specialities/" + speciality.icon)) {
@@ -298,7 +259,7 @@ class SpecialitiesController {
       return responseModel.successResponse(1, "Specialities Deleted Successfully", {});
 
     } catch (err) {
-      if (t) await t.rollback().catch(() => {});
+      if (t) await t.rollback().catch(() => { });
       const errMessage = typeof err === "string" ? err : err.message;
       return responseModel.failResponse(0, "Something went wrong.", {}, errMessage);
     }

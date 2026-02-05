@@ -18,7 +18,7 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM("doctor", "hospital", "service", "speciality"),
+        type: DataTypes.ENUM("garage", "showroom", "service_center", "wash_station", "tyre_shop", "others"),
         allowNull: false,
       },
       reference_id: {

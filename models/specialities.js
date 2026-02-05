@@ -40,27 +40,28 @@ module.exports = function (sequelize, DataTypes) {
     return specialities;
   };
 
-  // ADD YE HOOK — CREATE KE LIYE
-  Specialities.afterCreate(async (speciality, options) => {
-    try {
-      const SearchModel = sequelize.models.Search || sequelize.models.search;
-      if (!SearchModel) return;
-
-      const name = speciality.name?.trim();
-      if (!name) return;
-
-      const keyword = `${name} specialist doctor treatment`.toLowerCase();
-
-      await SearchModel.create({
-        name: name,
-        keyword: keyword.slice(0, 255),
-        type: 'speciality',
-        reference_id: speciality.id,
-        search_count: 0
-      }, { transaction: options.transaction });
-
-    } catch (err) {
-      console.error('Speciality afterCreate search sync failed:', err.message);
+  // TRIGGER ESTABLISHMENT SYNC ON NAME CHANGE
+  Specialities.afterUpdate(async (speciality, options) => {
+    if (speciality.changed('name')) {
+      try {
+        const EstablishmentSpeciality = sequelize.models.establishment_specialities;
+        const Establishment = sequelize.models.establishments;
+        if (EstablishmentSpeciality && Establishment) {
+          const links = await EstablishmentSpeciality.findAll({
+            where: { speciality_id: speciality.id },
+            attributes: ['establishment_id'],
+            transaction: options.transaction
+          });
+          for (const link of links) {
+            await Establishment.update(
+              { updated_at: new Date() },
+              { where: { id: link.establishment_id }, transaction: options.transaction, individualHooks: true }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Specialities afterUpdate search sync trigger failed:', err.message);
+      }
     }
   });
 

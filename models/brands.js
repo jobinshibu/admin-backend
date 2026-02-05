@@ -42,5 +42,30 @@ module.exports = function (sequelize, DataTypes) {
     return Brand;
   };
 
+  // TRIGGER ESTABLISHMENT SYNC ON NAME CHANGE
+  Brand.afterUpdate(async (brand, options) => {
+    if (brand.changed('name')) {
+      try {
+        const EstablishmentBrands = sequelize.models.establishment_brands;
+        const Establishment = sequelize.models.establishments;
+        if (EstablishmentBrands && Establishment) {
+          const links = await EstablishmentBrands.findAll({
+            where: { brand_id: brand.id },
+            attributes: ['establishment_id'],
+            transaction: options.transaction
+          });
+          for (const link of links) {
+            await Establishment.update(
+              { updated_at: new Date() },
+              { where: { id: link.establishment_id }, transaction: options.transaction, individualHooks: true }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Brands afterUpdate search sync trigger failed:', err.message);
+      }
+    }
+  });
+
   return Brand;
 };
