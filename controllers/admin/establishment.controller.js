@@ -1242,8 +1242,8 @@ class EstablishmentController {
         );
       }
 
-      // === NEW SEARCH SYNC ===
-      // await this._syncWithSearch(id, t); // Removed: handled by model hooks
+      const typeName = establishment.establishmentTypeInfo?.name || "Others";
+      const isSearchable = !!establishment.establishmentTypeInfo;
 
       // SUCCESS: Commit karo aur return
       await t.commit();
