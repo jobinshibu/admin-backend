@@ -65,5 +65,58 @@ module.exports = function (sequelize, DataTypes) {
     }
   });
 
+  // ===== SEARCH SYNC =====
+  const syncSpecialitySearch = async (speciality, transaction = null) => {
+    try {
+      const SearchModel = sequelize.models.Search || sequelize.models.search;
+      if (!SearchModel) return;
+
+      // remove existing
+      await SearchModel.destroy({
+        where: { reference_id: speciality.id, type: "speciality" },
+        transaction
+      });
+
+      // insert new
+      await SearchModel.create({
+        name: speciality.name.trim(),
+        keyword: speciality.name.toLowerCase().trim(),
+        type: "speciality",
+        reference_id: speciality.id,
+        search_count: 0
+      }, { transaction });
+
+    } catch (err) {
+      console.error("Speciality search sync failed:", err.message);
+    }
+  };
+
+
+  // ===== HOOKS =====
+
+  // create
+  Specialities.afterCreate(async (speciality, options) => {
+    await syncSpecialitySearch(speciality, options.transaction);
+  });
+
+  // update
+  Specialities.afterUpdate(async (speciality, options) => {
+    if (speciality.changed('name')) {
+      await syncSpecialitySearch(speciality, options.transaction);
+    }
+  });
+
+  // delete
+  Specialities.afterDestroy(async (speciality, options) => {
+    const SearchModel = sequelize.models.Search || sequelize.models.search;
+    if (!SearchModel) return;
+
+    await SearchModel.destroy({
+      where: { reference_id: speciality.id, type: "speciality" },
+      transaction: options.transaction
+    });
+  });
+
+
   return Specialities;
 };

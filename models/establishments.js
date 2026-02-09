@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 require("dotenv").config();
 const Image_URL = `${process.env.BASE_URL}`;
 
@@ -191,8 +192,8 @@ module.exports = function (sequelize, DataTypes) {
     });
 
 
-    // === CENTRALIZED SEARCH SYNC HELPER ===
-    const syncWithSearch = async (establishmentId, transaction = null) => {
+
+     const syncWithSearch = async (establishmentId, transaction = null) => {
       try {
         const searchModel = models.Search || models.search;
         if (!searchModel) return;
@@ -205,12 +206,16 @@ module.exports = function (sequelize, DataTypes) {
             {
               model: models.establishment_specialities,
               as: 'specialitiesList',
-              include: [{ model: models.specialities, as: 'name', attributes: ['name'] }]
+              include: [
+                { model: models.specialities, as: 'name', attributes: ['name'] }
+              ]
             },
             {
               model: models.establishment_brands,
               as: 'brandsList',
-              include: [{ model: models.brands, as: 'brandInfo', attributes: ['name'] }]
+              include: [
+                { model: models.brands, as: 'brandInfo', attributes: ['name'] }
+              ]
             },
             {
               model: models.establishment_types,
@@ -223,25 +228,35 @@ module.exports = function (sequelize, DataTypes) {
 
         if (!establishment) return;
 
-        // STEP 1: Always delete old entries
+        /* ----- remove old search entries ----- */
         await searchModel.destroy({
-          where: { reference_id: establishmentId, type: { [Op.ne]: 'doctor' } },
+          where: { reference_id: establishmentId },
           transaction
         });
 
-        // If inactive, don't recreate
+        /* ----- if inactive do not reinsert ----- */
         if (!establishment.active_status) return;
 
-        // STEP 2: Construct keywords
+        /* ----- keyword construction ----- */
         const zoneName = establishment.zoneInfo?.name || "";
         const cityName = establishment.cityInfo?.name || "";
-        const specialityNames = establishment.specialitiesList?.map(s => s.name?.name).filter(Boolean).join(" ") || "";
-        const brandNames = establishment.brandsList?.map(b => b.brandInfo?.name).filter(Boolean).join(" ") || "";
+        const specialityNames = establishment.specialitiesList
+          ?.map(s => s.name?.name)
+          .filter(Boolean)
+          .join(" ") || "";
+
+        const brandNames = establishment.brandsList
+          ?.map(b => b.brandInfo?.name)
+          .filter(Boolean)
+          .join(" ") || "";
+
         const typeName = establishment.establishmentTypeInfo?.name || "Others";
 
-        const keywords = `${establishment.name} ${zoneName} ${cityName} ${specialityNames} ${brandNames} ${typeName}`.toLowerCase().trim();
+        const keywords = `${establishment.name} ${zoneName} ${cityName} ${specialityNames} ${brandNames} ${typeName}`
+          .toLowerCase()
+          .trim();
 
-        // STEP 3: Create search entry
+        /* ----- insert search row ----- */
         await searchModel.create({
           name: establishment.name.trim(),
           keyword: keywords.slice(0, 255),
@@ -250,46 +265,49 @@ module.exports = function (sequelize, DataTypes) {
           search_count: 0
         }, { transaction });
 
-      } catch (error) {
-        console.error(`Model-level search sync failed for establishment ${establishmentId}:`, error);
+      } catch (err) {
+        console.error("Search sync failed:", err);
       }
     };
 
-    // === HOOKS ===
+    /* ======================= HOOKS ======================= */
+
     Establishment.afterCreate(async (establishment, options) => {
       await syncWithSearch(establishment.id, options.transaction);
+    });
+
+    Establishment.afterBulkCreate(async (records, options) => {
+      for (const r of records) {
+        await syncWithSearch(r.id, options.transaction);
+      }
     });
 
     Establishment.afterUpdate(async (establishment, options) => {
       await syncWithSearch(establishment.id, options.transaction);
     });
 
-    Establishment.afterDestroy(async (establishment, options) => {
-      try {
-        const searchModel = models.Search || models.search;
-        if (searchModel) {
-          await searchModel.destroy({
-            where: { reference_id: establishment.id },
-            transaction: options.transaction
-          });
-        }
-      } catch (error) {
-        console.error('Establishment afterDestroy search cleanup failed:', error);
-      }
-    });
-
     Establishment.afterBulkUpdate(async (options) => {
       try {
-        const { where } = options;
-        if (!where || !where.id) return;
+        const ids = Array.isArray(options.where.id)
+          ? options.where.id
+          : [options.where.id];
 
-        let ids = Array.isArray(where.id) ? where.id : [where.id];
         for (const id of ids) {
           await syncWithSearch(id, options.transaction);
         }
-      } catch (error) {
-        console.error('Establishment afterBulkUpdate search sync failed:', error);
+      } catch (err) {
+        console.error("afterBulkUpdate search sync failed:", err);
       }
+    });
+
+    Establishment.afterDestroy(async (establishment, options) => {
+      const searchModel = models.Search || models.search;
+      if (!searchModel) return;
+
+      await searchModel.destroy({
+        where: { reference_id: establishment.id },
+        transaction: options.transaction
+      });
     });
   };
 
