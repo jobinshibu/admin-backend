@@ -47,12 +47,14 @@ const upload = multer({
   storage: storage,
   fileFilter: multerFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024,  // 10MB per file
-    files: 10                    // max 10 files per request
+    fileSize: 20 * 1024 * 1024,   // 20MB per file
+    fieldSize: 50 * 1024 * 1024,  // total field size
+    files: 20                     // max files allowed
   }
 });
 
-const cpUpload = upload.fields([{ name: "image", maxCount: 10 }]);
+
+const cpUpload = upload.fields([{ name: "image", maxCount: 20 }]);
 
 // Get all establishment images
 router.get("/", async (req, res) => {
@@ -78,6 +80,7 @@ router.post(
   cpUpload,
   [joivalidate.joivalidate(joiSchema.establishmentImageAdd)],
   async (req, res) => {
+    console.log("files received:", req.files?.image?.length);
     let result = await establishmentImageController.store(req);
     res.status(result.status).send(result);
   }
