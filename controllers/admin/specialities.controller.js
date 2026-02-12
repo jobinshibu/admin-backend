@@ -122,7 +122,7 @@ class SpecialitiesController {
   //  specialities store data
   async store(req) {
     try {
-      const { name, description, tier } = req.body;
+      const { name, description, tier, priority } = req.body;
       if (req.files["icon"]) {
         const getSpecialitiesCheck = await SpecialitiesModal.findOne({
           where: { name: name },
@@ -135,6 +135,7 @@ class SpecialitiesController {
             icon: req.files["icon"][0]["filename"],
             description: description,
             tier: tier,
+            priority: priority || 0,
           };
           const savespecialitiesData = await SpecialitiesModal.build(
             specialitiesData
@@ -173,7 +174,7 @@ class SpecialitiesController {
     try {
       t = await db.sequelize.transaction();
       const id = req.params.id;
-      const { name, description, tier } = req.body;
+      const { name, description, tier, priority } = req.body;
 
       // Check duplicate name
       const getSpecialitiesCheck = await SpecialitiesModal.findOne({
@@ -187,7 +188,7 @@ class SpecialitiesController {
         return responseModel.validationError(0, "Specialities name already exist", {});
       }
 
-      let specialitiesData = { name, description, tier };
+      let specialitiesData = { name, description, tier, priority: priority || 0 };
 
       if (req.files?.["icon"]) {
         specialitiesData.icon = req.files["icon"][0]["filename"];

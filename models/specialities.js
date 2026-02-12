@@ -26,6 +26,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         defaultValue: 1,
       },
+      priority: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
     },
     {
       updatedAt: "updated_at",

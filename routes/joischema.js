@@ -124,6 +124,7 @@ const schemas = {
     name: Joi.string().required(),
     tier: Joi.number().required(),
     description: Joi.string().optional().allow(""),
+    priority: Joi.number().optional().allow("", 0),
   }),
   bannerAdd: Joi.object().keys({
     link: Joi.string().uri().required(),
@@ -142,6 +143,7 @@ const schemas = {
     tier: Joi.number().required(),
     description: Joi.string().optional().allow(""),
     icon: Joi.string().optional().allow(""),
+    priority: Joi.number().optional().allow("", 0),
   }),
   nationalityAdd: Joi.object().keys({
     name: Joi.string().required(),

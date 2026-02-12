@@ -30,11 +30,16 @@ const multerFilter = (req, file, cb) => {
   if (
     file.mimetype === "image/png" ||
     file.mimetype === "image/jpeg" ||
-    file.mimetype === "image/jpg"
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "video/mp4" ||
+    file.mimetype === "video/mpeg" ||
+    file.mimetype === "video/quicktime" ||
+    file.mimetype === "video/webm" ||
+    file.mimetype === "video/x-msvideo"
   ) {
     cb(null, true);
   } else {
-    cb(new Error("Please upload a valid image (PNG, JPEG, JPG)"), false);
+    cb(new Error("Please upload a valid image (PNG, JPEG, JPG) or video (MP4, MPEG, QuickTime, WebM, AVI)"), false);
   }
 };
 
