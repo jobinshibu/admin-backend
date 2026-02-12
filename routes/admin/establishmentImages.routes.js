@@ -8,21 +8,20 @@ const { AdminRoute } = require("../../controllers");
 const AdminAuth = require("../../middleware");
 
 const establishmentImageController = new AdminRoute.establishmentImagesCtrl.EstablishmentImageController();
-const fs = require("fs");
-
-const uploadDir = "./uploads/establishment_image";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    cb(null, "./uploads/establishment_image");
   },
   filename: (req, file, cb) => {
     cb(
       null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+      file.fieldname +
+      "-" +
+      Date.now() +
+      "-" +
+      Math.round(Math.random() * 1e9) +
+      path.extname(file.originalname)
     );
   },
 });
@@ -44,7 +43,7 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
-const cpUpload = upload.fields([{ name: "image", maxCount: 10 }]);
+const cpUpload = upload.fields([{ name: "image", maxCount: 20 }]);
 
 // Get all establishment images
 router.get("/", async (req, res) => {
