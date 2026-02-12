@@ -46,9 +46,13 @@ const multerFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: multerFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,  // 10MB per file
+    files: 10                    // max 10 files per request
+  }
 });
 
-const cpUpload = upload.fields([{ name: "image", maxCount: 20 }]);
+const cpUpload = upload.fields([{ name: "image", maxCount: 10 }]);
 
 // Get all establishment images
 router.get("/", async (req, res) => {
