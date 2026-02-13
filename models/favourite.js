@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
         field: "customer_id",
       },
       type: {
-        type: DataTypes.ENUM("doctor", "hospital", "service", "speciality", "clinic", "pharmacy"),
+        type: DataTypes.STRING(255),
         allowNull: false,
       },
       reference_id: {
